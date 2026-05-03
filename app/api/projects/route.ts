@@ -1,25 +1,11 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { jwtVerify } from "jose"
 import { connectDB } from "@/lib/db"
-import Project, { ProjectRole } from "@/models/project.model"
+import Project from "@/models/project.model"
+import {ProjectRole} from "@/types/project";
 import { createProjectSchema } from "@/lib/validations/project.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
-
-async function getUserIdFromRequest(req: NextRequest) {
-    const token = req.cookies.get("accessToken")?.value
-    if (!token) return null
-
-    try {
-        const { payload } = await jwtVerify(token, SECRET)
-        const id = (payload.id || payload.userId) as string | undefined
-        return id ?? null
-    } catch {
-        return null
-    }
-}
+import {getUserIdFromRequest} from "@/lib/jwt";
 
 function slugify(input: string) {
     const normalized = input
@@ -56,6 +42,7 @@ export async function GET(req: NextRequest) {
         await connectDB()
 
         const projects = await Project.find({
+            isActive: true,
             $or: [{ "owner.userId": userId }, { "members.userId": userId }],
         })
             .select("title projectId isPublic createdAt")
@@ -104,6 +91,7 @@ export async function POST(req: NextRequest) {
             projectId,
             description,
             isPublic: visibility === "public",
+            isActive: true,
             owner: {
                 userId: new mongoose.Types.ObjectId(userId),
                 role: ProjectRole.ADMIN,

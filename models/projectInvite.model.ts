@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { ProjectRole } from "@/models/project.model";
+import {ProjectRole} from "@/types/project";
 
 export interface IProjectInvite extends Document {
     projectId: mongoose.Types.ObjectId;

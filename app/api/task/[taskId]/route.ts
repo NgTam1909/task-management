@@ -1,27 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
-import { jwtVerify } from "jose"
 import { connectDB } from "@/lib/db"
-import Task, { TaskStatus } from "@/models/task.model"
-import Project, { IProjectMember, ProjectRole } from "@/models/project.model"
+import Task from "@/models/task.model"
+import Project, { IProjectMember} from "@/models/project.model"
+import {ProjectRole} from "@/types/project";
 import { updateTaskSchema } from "@/lib/validations/task.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
-
-async function getUserIdFromRequest(req: NextRequest) {
-    const token = req.cookies.get("accessToken")?.value
-    if (!token) return null
-
-    try {
-        const { payload } = await jwtVerify(token, SECRET)
-        const id = (payload.id || payload.userId) as string | undefined
-        return id ?? null
-    } catch {
-        return null
-    }
-}
-
+import {getUserIdFromRequest} from "@/lib/jwt";
+import {getTaskOverDue} from "@/lib/overDue";
+import {TaskStatus} from "@/types/task";
+//xử lý sub-task và 1 vài action của hệ thống task
 function toObjectId(id: string) {
     return new mongoose.Types.ObjectId(id)
 }
@@ -82,7 +70,7 @@ export async function PATCH(
             return NextResponse.json({ message: "Không tìm thấy dự án" }, { status: 404 })
         }
 
-        let currentRole: ProjectRole | null = null
+        let currentRole: ProjectRole | null
         if (project.owner?.userId?.toString() === userId) {
             currentRole = project.owner.role
         } else {
@@ -95,7 +83,6 @@ export async function PATCH(
         }
 
         const data = parsed.data
-
         // Subtask constraint: if parent is cancelled, children must remain cancelled.
         if (task.parentId && data.status !== undefined) {
             const parent = await Task.findById(task.parentId).select("status").lean()
@@ -135,7 +122,24 @@ export async function PATCH(
                 )
             }
         }
+        const updateData: Record<string, unknown> = {}
 
+        if (data.title !== undefined) updateData.title = data.title
+        if (data.description !== undefined) updateData.description = data.description
+        if (data.status !== undefined) updateData.status = data.status
+        if (data.priority !== undefined) updateData.priority = data.priority
+        if (data.labels !== undefined) updateData.labels = data.labels
+        if (data.estimate !== undefined) updateData.estimate = data.estimate
+        if (data.assignees !== undefined) {
+            updateData.assignees = data.assignees.map((id) => toObjectId(id))
+        }
+
+        if (data.startDate !== undefined) {
+            updateData.startDate =
+                data.startDate && data.startDate.trim().length > 0
+                    ? new Date(`${data.startDate}T00:00:00`)
+                    : null
+        }
         if (data.status !== undefined) {
             const currentStatus = task.status as TaskStatus
             const nextStatus = data.status as TaskStatus
@@ -145,9 +149,15 @@ export async function PATCH(
                     { status: 400 }
                 )
             }
-
-            // When parent is marked DONE: try to auto-mark subtasks DONE (except CANCELLED) if the transition is valid.
-            // Block only if there are remaining subtasks that cannot be moved to DONE.
+            if (nextStatus === TaskStatus.IN_PROGRESS ) {
+                updateData.startedAt = new Date()
+            }
+            if ((nextStatus !== TaskStatus.IN_PROGRESS) && task.startedAt) {
+                updateData.startedAt = null
+            }
+            updateData.status = nextStatus
+// Khi nhiệm vụ cha được đánh dấu done: hãy thử tự động đánh dấu các nhiệm vụ con là done (trừ cancelled) nếu quá trình chuyển đổi hợp lệ.
+// Chỉ chặn nếu vẫn còn nhiệm vụ con không thể chuyển sang trạng thái done.
             if (nextStatus === TaskStatus.DONE) {
                 const children = await Task.find({ parentId: task._id })
                     .select("_id status")
@@ -209,31 +219,12 @@ export async function PATCH(
                 }
             }
         }
-
-        const updateData: Record<string, unknown> = {}
-
-        if (data.title !== undefined) updateData.title = data.title
-        if (data.description !== undefined) updateData.description = data.description
-        if (data.status !== undefined) updateData.status = data.status
-        if (data.priority !== undefined) updateData.priority = data.priority
-        if (data.labels !== undefined) updateData.labels = data.labels
-        if (data.estimate !== undefined) updateData.estimate = data.estimate
-        if (data.assignees !== undefined) {
-            updateData.assignees = data.assignees.map((id) => toObjectId(id))
-        }
-
-        if (data.startDate !== undefined) {
-            updateData.startDate =
-                data.startDate && data.startDate.trim().length > 0
-                    ? new Date(`${data.startDate}T00:00:00`)
-                    : null
-        }
-
         if (data.dueDate !== undefined) {
             updateData.dueDate =
                 data.dueDate && data.dueDate.trim().length > 0
                     ? new Date(`${data.dueDate}T00:00:00`)
                     : null
+            updateData.overDue = false
         }
 
         const oldValue: Record<string, unknown> = {}
@@ -263,25 +254,73 @@ export async function PATCH(
 
         await Task.updateOne({ _id: task._id }, { $set: updateData })
 
-        if (Object.keys(newValue).length > 0) {
-            try {
-                const isStatusOnly =
-                    Object.keys(newValue).length === 1 && newValue.status !== undefined
+        try {
+            // Snapshot overdue một lần duy nhất
+            const { isOverdue } = getTaskOverDue(task)
+
+            if (isOverdue && !task.overDue) {
+                await Task.updateOne(
+                    { _id: task._id },
+                    {
+                        $set: {
+                            overDue: true,
+                        },
+                    }
+                )
 
                 await ActivityLog.create({
                     userId: new mongoose.Types.ObjectId(userId),
                     projectId: project._id,
                     entityType: "Task",
                     entityId: task._id,
-                    action: isStatusOnly
-                        ? ActivityAction.UPDATE_TASK_STATUS
-                        : ActivityAction.UPDATE_TASK,
+                    action: ActivityAction.TASK_OVERDUE,
+                    metadata: {
+                        dueDate: task.dueDate,
+                        source: "system",
+                    },
+                })
+            }
+
+            // Audit các action do user thực hiện
+            if (Object.keys(newValue).length > 0) {
+                let action = ActivityAction.UPDATE_TASK
+
+                const changedKeys = Object.keys(newValue)
+
+                const isStatusOnly =
+                    changedKeys.length === 1 &&
+                    newValue.status !== undefined
+
+                const isDueDateOnly =
+                    changedKeys.length === 1 &&
+                    newValue.dueDate !== undefined
+
+                if (isStatusOnly) {
+                    const nextStatus = newValue.status as TaskStatus
+
+                    if (nextStatus === TaskStatus.DONE) {
+                        action = ActivityAction.TASK_COMPLETED
+                    } else if (nextStatus === TaskStatus.CANCELLED) {
+                        action = ActivityAction.TASK_CANCELLED
+                    } else {
+                        action = ActivityAction.UPDATE_TASK_STATUS
+                    }
+                } else if (isDueDateOnly) {
+                    action = ActivityAction.TASK_DEADLINE_EXTENDED
+                }
+
+                await ActivityLog.create({
+                    userId: new mongoose.Types.ObjectId(userId),
+                    projectId: project._id,
+                    entityType: "Task",
+                    entityId: task._id,
+                    action,
                     oldValue,
                     newValue,
                 })
-            } catch {
-                // ignore audit log errors
             }
+        } catch {
+            // ignore audit log errors
         }
 
         return NextResponse.json({ success: true })

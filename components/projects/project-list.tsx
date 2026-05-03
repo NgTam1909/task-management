@@ -67,10 +67,10 @@ export default function ProjectList({
                 <Collapsible key={project._id}>
                     <div className="flex items-center justify-between">
                         <CollapsibleTrigger asChild>
-                            <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition w-full text-left">
-                                <Folder size={18} />
-                                <span>{project.title}</span>
-                                <ChevronDown size={16} className="ml-auto" />
+                            <button className="flex-1 min-w-0 flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition text-left">
+                                <Folder size={18} className="flex-shrink-0" />
+                                <span className="flex-1 truncate">{project.title}</span>
+                                <ChevronDown size={16} className="flex-shrink-0" />
                             </button>
                         </CollapsibleTrigger>
 

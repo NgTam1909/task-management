@@ -1,5 +1,9 @@
 import {  TaskStatus } from "@/types/task"
-
+export enum ProjectRole {
+    ADMIN = "Admin",
+    LEADER = "Leader",
+    MEMBER = "Member",
+}
 export type ProjectInfo = {
     title: string;
     projectId: string;

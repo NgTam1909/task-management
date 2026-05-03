@@ -151,9 +151,9 @@ export default function AdvancedDashboard({ projectId }: Props) {
                 {/* MONTHLY */}
                 <Card className="rounded-2xl">
                     <CardHeader>
-                        <CardTitle>Task theo tháng</CardTitle>
+                        <CardTitle>Tiến độ dự án</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                            Nhấn vào cột tháng để đổi thống kê theo tháng
+                            Nhấn vào cột tháng để xem trạng thái các task trong tháng đó
                         </p>
                     </CardHeader>
 

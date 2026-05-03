@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Project, { ProjectRole, IProjectMember } from "@/models/project.model";
+import Project, { IProjectMember } from "@/models/project.model";
+import {ProjectRole} from "@/types/project";
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model";
 import {getUserIdFromRequest} from "@/lib/jwt";
 
 async function findProject(projectId: string) {
-    let project = await Project.findOne({ projectId });
+    let project = await Project.findOne({ projectId, isActive: true });
     if (!project && mongoose.isValidObjectId(projectId)) {
         project = await Project.findById(projectId);
     }

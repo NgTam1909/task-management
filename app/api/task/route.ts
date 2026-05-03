@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
-import { jwtVerify } from "jose"
 import { connectDB } from "@/lib/db"
-import Task, { TaskStatus } from "@/models/task.model"
-import Project, { IProjectMember, ProjectRole } from "@/models/project.model"
+import Task from "@/models/task.model"
+import Project, { IProjectMember } from "@/models/project.model"
+import {ProjectRole} from "@/types/project";
 import { createTaskSchema } from "@/lib/validations/task.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
+import {TaskStatus} from "@/types/task";
 
 function generateTaskCode(id: string) {
     const suffix = id.slice(-6).toUpperCase()
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "Thiếu project" }, { status: 400 })
         }
 
-        let project = await Project.findOne({ projectId: rawProjectId })
+        let project = await Project.findOne({ projectId: rawProjectId, isActive: true})
         if (!project && mongoose.isValidObjectId(rawProjectId)) {
             project = await Project.findById(rawProjectId)
         }
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // 👉 TẠO TASK (CHƯA CÓ CODE)
+        // TẠO TASK (CHƯA CÓ CODE)
         const task = new Task({
             ...data,
             projectId: project._id,
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest) {
         })
         await task.save()
 
-        // 👉 THÊM PHẦN TẠO CODE TỪ _ID VÀ CẬP NHẬT
+        // THÊM PHẦN TẠO CODE TỪ _ID VÀ CẬP NHẬT
         if (!task.code) {
             const code = generateTaskCode(task._id.toString())
             task.code = code

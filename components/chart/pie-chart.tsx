@@ -3,11 +3,11 @@ import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer
 } from "recharts"
 const COLOR_MAP = {
-    backlog: "#fbbf24",      // Vàng nhạt
-    todo: "#60a5fa",         // Xanh dương nhạt
-    inprogress: "#a78bfa",   // Tím nhạt
-    done: "#34d399",         // Xanh lục nhạt
-    cancelled: "#cbd5e1",    // Xám lạnh
+    backlog: "#fbbf24",
+    todo: "#60a5fa",
+    inprogress: "#a78bfa",
+    done: "#34d399",
+    cancelled: "#cbd5e1",
 }
 
 type PieItem = {

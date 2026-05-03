@@ -7,7 +7,6 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
-    Cell,
 } from "recharts"
 import {Item} from "@/types/stats";
 
@@ -27,20 +26,18 @@ export default function TaskMonthlyChart({
         .sort((a, b) => {
             const [ma, ya] = a.month.split("/").map(Number)
             const [mb, yb] = b.month.split("/").map(Number)
-
-            const da = new Date(ya, ma - 1).getTime()
-            const db = new Date(yb, mb - 1).getTime()
-
-            return da - db
+            return new Date(ya, ma - 1).getTime() - new Date(yb, mb - 1).getTime()
         })
         .map((item) => {
             const carryOver = item.carryOver ?? 0
             const created = item.created ?? 0
             const completed = item.completed ?? 0
             const overdue = item.overdue ?? 0
-
-            const pending = carryOver + created
-
+            const cancelled = item.overdue ?? 0
+            const pending = Math.max(
+                0,
+                carryOver + created - completed - cancelled
+            )
             return {
                 ...item,
                 carryOver,
@@ -94,28 +91,40 @@ export default function TaskMonthlyChart({
                 />
 
                 <Tooltip
-                    cursor={{ fill: '#f9fafb', opacity: 0.5 }}
-                    contentStyle={{
-                        borderRadius: "8px",
-                        border: "1px solid #e5e7eb",
-                        backgroundColor: "#ffffff",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                        padding: "8px 12px",
-                        fontSize: "12px",
-                        fontWeight: 500
-                    }}
-                    formatter={(value, name) => [value ?? 0, name]}
-                    labelStyle={{
-                        fontWeight: 600,
-                        marginBottom: "4px",
-                        color: "#374151"
+                    content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null
+
+                        return (
+                            <div className="bg-white rounded-lg border p-3 shadow-md">
+                                <p className="font-semibold mb-2">{label}</p>
+
+                                {payload.map((entry, index) => {
+                                    const safeColor =
+                                        entry.color === "#f3f4f6"
+                                            ? "#374151"
+                                            : entry.color
+
+                                    return (
+                                        <div key={index}>
+              <span
+                  style={{
+                      color: safeColor,
+                      fontWeight: 500,
+                  }}
+              >
+                {entry.name}: {entry.value}
+              </span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )
                     }}
                 />
-
                 <Legend
                     wrapperStyle={{
                         paddingTop: "16px",
-                        fontSize: "12px"
+                        fontSize: "12px",
                     }}
                     iconType="circle"
                     iconSize={10}

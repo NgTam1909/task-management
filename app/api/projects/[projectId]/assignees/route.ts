@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
 import { connectDB } from "@/lib/db"
-import Project, { ProjectRole, IProjectMember } from "@/models/project.model"
+import Project, { IProjectMember } from "@/models/project.model"
+import {ProjectRole} from "@/types/project";
 import User from "@/models/user.model"
 import {LeanUser} from "@/types/task"
 import {getUserIdFromRequest} from "@/lib/jwt";
@@ -23,7 +24,7 @@ export async function GET(
 
         await connectDB()
 
-        let project = await Project.findOne({ projectId })
+        let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
             project = await Project.findById(projectId)
         }

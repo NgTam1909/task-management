@@ -1,10 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import {ProjectRole} from "@/types/project";
 
-export enum ProjectRole {
-    ADMIN = "Admin",
-    LEADER = "Leader",
-    MEMBER = "Member",
-}
+
 
 export interface IProjectMember {
     userId: mongoose.Types.ObjectId;
@@ -16,11 +13,10 @@ export interface IProject extends Document {
     title: string;
     projectId: string;
     description?: string;
-    background?: string;
-    avatar?: string;
     owner: IProjectMember;
     members: IProjectMember[];
     isPublic: boolean;
+    isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -41,8 +37,6 @@ const ProjectSchema = new Schema<IProject>(
         },
 
         description: String,
-        background: String,
-        avatar: String,
         owner: {
             userId: {
                 type: Schema.Types.ObjectId,
@@ -81,6 +75,10 @@ const ProjectSchema = new Schema<IProject>(
         isPublic: {
             type: Boolean,
             default: false,
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
         },
     },
     {

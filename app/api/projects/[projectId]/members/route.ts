@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
 import { connectDB } from "@/lib/db"
-import Project, { ProjectRole, IProjectMember } from "@/models/project.model"
+import Project, { IProjectMember } from "@/models/project.model"
+import {ProjectRole} from "@/types/project";
 import User from "@/models/user.model"
 import { updateMemberRoleSchema } from "@/lib/validations/member.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
@@ -24,7 +25,7 @@ export async function GET(
 
         await connectDB()
 
-        let project = await Project.findOne({ projectId })
+        let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
             project = await Project.findById(projectId)
         }
@@ -116,7 +117,7 @@ export async function PATCH(
 
         await connectDB()
 
-        let project = await Project.findOne({ projectId })
+        let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
             project = await Project.findById(projectId)
         }
@@ -206,7 +207,7 @@ export async function DELETE(
 
         await connectDB()
 
-        let project = await Project.findOne({ projectId })
+        let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
             project = await Project.findById(projectId)
         }

@@ -25,7 +25,7 @@ export async function GET(
 
         await connectDB()
 
-        let project = await Project.findOne({ projectId })
+        let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
             project = await Project.findById(projectId)
         }

@@ -3,6 +3,8 @@ export type MonthlyItem = {
     created: number
     completed: number
     overdue: number
+    carryOver: number
+    cancelled: number
 }
 export type StatsListFilter =
     | { kind: "all" }

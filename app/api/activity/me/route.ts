@@ -112,6 +112,7 @@ export async function GET(req: NextRequest) {
         const [user, projects] = await Promise.all([
             User.findById(userId).select("firstName lastName email").lean(),
             Project.find({
+                isActive: true,
                 $or: [{ "owner.userId": userId }, { "members.userId": userId }],
             })
                 .select("_id title projectId")

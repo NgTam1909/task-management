@@ -25,8 +25,7 @@ if (!global.mongoose) {
 export const connectDB = async () => {
     try {
         if (mongoose.connection.readyState === 1) {
-            console.log("MongoDB đã kết nối")
-            return
+             return
         }
 
         await mongoose.connect(MONGODB_URI)

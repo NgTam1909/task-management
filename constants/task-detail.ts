@@ -7,6 +7,10 @@ export const taskDetailActionLabels: Record<string, string> = {
     CREATE_TASK: "Tạo task",
     UPDATE_TASK: "Cập nhật task",
     UPDATE_TASK_STATUS: "Cập nhật trạng thái",
+    TASK_COMPLETED: "Task đã hoàn thành",
+    TASK_CANCELLED: "Task đã bị hủy",
+    TASK_DEADLINE_EXTENDED: "Gia hạn deadline",
+    TASK_OVERDUE: "Task quá hạn",
 }
 
 export const taskDetailFieldLabels: Record<string, string> = {

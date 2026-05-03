@@ -1,29 +1,56 @@
-import { Task, TaskStatus } from "@/types/task"
+import { TaskStatus } from "@/types/task"
+
+type TaskLike = {
+    dueDate?: string | Date | null
+    startDate?: string | Date | null
+    updatedAt?: string | Date | null
+    startedAt?: string | Date | null
+    estimate?: number | null
+    status: string
+}
 
 function startOfDay(date: Date) {
     const d = new Date(date)
     d.setHours(0, 0, 0, 0)
     return d
 }
-function parseDate(value?: string) {
+
+function parseDate(value?: string | Date | null) {
     if (!value) return null
+
+    if (value instanceof Date) {
+        if (Number.isNaN(value.getTime())) {
+            return null
+        }
+
+        return value
+    }
 
     const d = new Date(value)
 
-    if (Number.isNaN(d.getTime())) return null
+    if (Number.isNaN(d.getTime())) {
+        return null
+    }
 
     return d
 }
-export function parseDateOnly(dateStr?: string) {
-    if (!dateStr) return null
 
-    const d = new Date(dateStr)
-    if (Number.isNaN(d.getTime())) return null
+export function parseDateOnly(
+    value?: string | Date | null
+) {
+    const d = parseDate(value)
+
+    if (!d) {
+        return null
+    }
 
     return startOfDay(d)
 }
 
-export function getTaskOverDue(task: Task, now = new Date()) {
+export function getTaskOverDue(
+    task: TaskLike,
+    now = new Date()
+) {
     const today = startOfDay(now)
     const dueDate = parseDateOnly(task.dueDate)
 
@@ -35,37 +62,27 @@ export function getTaskOverDue(task: Task, now = new Date()) {
         !!dueDate &&
         dueDate.getTime() === today.getTime() &&
         !isFinished
-    let isOverdue =
+
+    const isOverdue =
         !!dueDate &&
-        dueDate.getTime() < today.getTime() &&
-        !isFinished
+        dueDate.getTime() < today.getTime()
 
     let isDelayed = false
 
     if (
         !isFinished &&
-        task.startDate &&
+        task.status === TaskStatus.IN_PROGRESS &&
+        task.startedAt &&
         typeof task.estimate === "number"
     ) {
-        const startDate = parseDate(task.startDate)
+        const startedAt = parseDate(task.startedAt)
 
-        let endDate: Date | null = null
-
-        if (task.status === "inprogress") {
-            endDate = now
-        } else if (task.updatedAt) {
-            endDate = parseDate(task.updatedAt)
-        }
-
-        if (startDate && endDate) {
+        if (startedAt) {
             const estimateMs = task.estimate * 60 * 60 * 1000
-
-            isDelayed =
-                endDate.getTime() - startDate.getTime() > estimateMs
+            const elapsedMs = now.getTime() - startedAt.getTime()
+            isDelayed = elapsedMs > estimateMs
         }
     }
-
-
 
     return {
         dueDate,
@@ -79,6 +96,6 @@ export function getTaskOverDue(task: Task, now = new Date()) {
                 ? "Chậm tiến độ"
                 : isDueToday
                     ? "Cảnh báo"
-                    : null
+                    : null,
     }
 }

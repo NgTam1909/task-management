@@ -3,10 +3,8 @@
 import { useMemo, useState } from "react"
 import { buildAdvancedStats } from "@/lib/stast"
 import { Task } from "@/types/task"
-import {getTaskOverDue} from "@/lib/overDue";
-import type {MonthlyItem, StatsListFilter} from "@/types/stats"
-
-
+import { getTaskOverDue } from "@/lib/overDue";
+import type { MonthlyItem, StatsListFilter } from "@/types/stats"
 
 function monthKeyFromDate(date: Date) {
     return `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`
@@ -26,34 +24,70 @@ export function useStats(tasks: Task[]) {
     const monthlyData = useMemo<MonthlyItem[]>(() => {
         const now = new Date()
         const map = new Map<string, MonthlyItem>()
+        let carryOver = 0
 
-        const ensure = (key: string) => {
-            if (!map.has(key)) {
-                map.set(key, { month: key, created: 0, completed: 0, overdue: 0 })
-            }
-            return map.get(key)!
-        }
+        // Lấy tất cả các tháng có dữ liệu và sắp xếp
+        const allMonthsSet = new Set<string>()
 
         tasks.forEach((task) => {
             if (task.createdAt) {
-                const key = monthKeyFromDate(new Date(task.createdAt))
-                const item = ensure(key)
-                item.created += 1
-
-                if (isTaskOverdue(task, now)) {
-                    item.overdue += 1
-                }
+                allMonthsSet.add(monthKeyFromDate(new Date(task.createdAt)))
             }
-
             if (task.status === "done" && task.updatedAt) {
-                const key = monthKeyFromDate(new Date(task.updatedAt))
-                const item = ensure(key)
-                item.completed += 1
+                allMonthsSet.add(monthKeyFromDate(new Date(task.updatedAt)))
             }
+            if (task.status === "cancelled" && task.updatedAt) {
+                allMonthsSet.add(monthKeyFromDate(new Date(task.updatedAt)))
+            }
+        })
+
+        const sortedMonths = Array.from(allMonthsSet).sort((a, b) => {
+            const [monthA, yearA] = a.split('/')
+            const [monthB, yearB] = b.split('/')
+            return new Date(Number(yearA), Number(monthA) - 1).getTime() -
+                new Date(Number(yearB), Number(monthB) - 1).getTime()
+        })
+
+        sortedMonths.forEach((month) => {
+            const newTasks = tasks.filter(t =>
+                t.createdAt && monthKeyFromDate(new Date(t.createdAt)) === month
+            ).length
+
+            const completedTasks = tasks.filter(t =>
+                t.status === "done" && t.updatedAt &&
+                monthKeyFromDate(new Date(t.updatedAt)) === month
+            ).length
+
+            const cancelledTasks = tasks.filter(t =>
+                t.status === "cancelled" && t.updatedAt &&
+                monthKeyFromDate(new Date(t.updatedAt)) === month
+            ).length
+
+            const overdueTasks = tasks.filter((t) => {
+                if (!t.dueDate) return false
+
+                return (
+                    monthKeyFromDate(new Date(t.dueDate)) === month &&
+                    getTaskOverDue(t, now).isOverdue
+                )
+            }).length
+            map.set(month, {
+                month,
+                created: newTasks,
+                completed: completedTasks,
+                overdue: overdueTasks,
+                carryOver: carryOver,
+                cancelled: cancelledTasks
+            })
+            carryOver = Math.max(
+                0,
+                carryOver + newTasks - completedTasks - cancelledTasks
+            )
         })
 
         return Array.from(map.values())
     }, [tasks])
+
     const tasksInSelectedMonth = useMemo(() => {
         if (!selectedMonth) return tasks
 
@@ -88,6 +122,7 @@ export function useStats(tasks: Task[]) {
     const cancelledCount = useMemo(() => {
         return tasks.filter((t) => t.status === "cancelled").length
     }, [tasks])
+
     const filteredTasks = useMemo(() => {
         const now = new Date()
 

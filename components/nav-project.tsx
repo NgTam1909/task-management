@@ -58,7 +58,7 @@ function NavProjectsContent() {
     }, [pathname, projects, searchParams]);
 
     return (
-        <SidebarContent className="w-fit flex-none">
+        <SidebarContent className="w-fit flex-none min-w-[200px] max-w-[280px]">
             <SidebarGroup>
                 <SidebarMenu>
                     <SidebarMenuItem>

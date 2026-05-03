@@ -1,18 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import {PriorityLevel, TaskStatus} from "@/types/task";
 
-export enum TaskStatus {
-    BACKLOG = "backlog",
-    TODO = "todo",
-    IN_PROGRESS = "inprogress",
-    DONE = "done",
-    CANCELLED = "cancelled"
-}
-export enum PriorityLevel {
-    NONE = "none",
-    LOW = "low",
-    MEDIUM = "medium",
-    HIGH = "high",
-}
 
 export interface ITaskComment {
     _id?: mongoose.Types.ObjectId;
@@ -35,8 +23,8 @@ export interface ITask extends Document {
     startDate?: Date;
     dueDate?: Date;
     estimate?: number;
+    startedAt?: Date;
     parentId?: mongoose.Types.ObjectId;
-    comment?: string[];
     comments?: ITaskComment[];
     resource?: mongoose.Types.ObjectId[];
     overDue: boolean;
@@ -111,14 +99,16 @@ const TaskSchema = new Schema<ITask>(
         estimate: {
             type: Number,
         },
-
+        startedAt: {
+            type: Date,
+        },
+        overDue: {
+            type: Boolean,
+            default: false,
+        },
         parentId: {
             type: Schema.Types.ObjectId,
             ref: "Task",
-        },
-
-        comment: {
-            type: String,
         },
 
         comments: [
@@ -154,7 +144,6 @@ const TaskSchema = new Schema<ITask>(
 
 
 TaskSchema.index({ status: 1 });
-TaskSchema.index({ code: 1 });
 TaskSchema.index({ creatorId: 1 });
 TaskSchema.index({ dueDate: 1 });
 

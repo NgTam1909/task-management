@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { jwtVerify } from "jose"
 import { connectDB } from "@/lib/db"
 import Project from "@/models/project.model"
 import Task from "@/models/task.model"
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
-
-async function getUserIdFromRequest(req: NextRequest) {
-    const token = req.cookies.get("accessToken")?.value
-    if (!token) return null
-
-    try {
-        const { payload } = await jwtVerify(token, SECRET)
-        const id = (payload.id || payload.userId) as string | undefined
-        return id ?? null
-    } catch {
-        return null
-    }
-}
+import {getUserIdFromRequest} from "@/lib/jwt";
+import { syncTaskOverdue } from "@/lib/syncTaskActivity"
 
 export async function GET(
     req: NextRequest,
@@ -36,7 +22,7 @@ export async function GET(
 
         await connectDB()
 
-        const project = await Project.findOne({ projectId })
+        const project = await Project.findOne({ projectId, isActive: true })
         if (!project) {
             return NextResponse.json({ message: "Không tìm thấy dự án" }, { status: 404 })
         }
@@ -52,14 +38,21 @@ export async function GET(
         const tasks = await Task.find({ projectId: project._id })
             .populate("assignees", "firstName lastName email")
             .sort({ createdAt: -1 })
-            .lean()
+
+        for (const task of tasks) {
+            try {
+                await syncTaskOverdue(task)
+            } catch {
+                // không để overdue sync làm crash API
+            }
+        }
 
         return NextResponse.json({
             project: {
                 title: project.title,
                 projectId: project.projectId,
             },
-            tasks,
+            tasks: tasks.map((task) => task.toObject()),
         })
     } catch {
         return NextResponse.json(

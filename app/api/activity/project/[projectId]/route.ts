@@ -7,7 +7,7 @@ import {PopulatedUser} from "@/types/user"
 import {getUserIdFromRequest} from "@/lib/jwt";
 
 async function findProjectByParam(projectId: string) {
-    let project = await Project.findOne({ projectId })
+    let project = await Project.findOne({ projectId, isActive: true })
     if (!project && mongoose.isValidObjectId(projectId)) {
         project = await Project.findById(projectId)
     }

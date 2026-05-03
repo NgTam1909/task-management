@@ -1,30 +1,16 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { jwtVerify } from "jose"
 import { connectDB } from "@/lib/db"
-import Project, { ProjectRole, IProjectMember } from "@/models/project.model"
+import Project, { IProjectMember } from "@/models/project.model"
+import {ProjectRole} from "@/types/project";
 import { updateProjectSchema } from "@/lib/validations/project.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import Task from "@/models/task.model"
 import ProjectInvite from "@/models/projectInvite.model"
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
-
-async function getUserIdFromRequest(req: NextRequest) {
-    const token = req.cookies.get("accessToken")?.value
-    if (!token) return null
-
-    try {
-        const { payload } = await jwtVerify(token, SECRET)
-        const id = (payload.id || payload.userId) as string | undefined
-        return id ?? null
-    } catch {
-        return null
-    }
-}
+import {getUserIdFromRequest} from "@/lib/jwt";
 
 async function findProjectByParam(projectId: string) {
-    let project = await Project.findOne({ projectId })
+    let project = await Project.findOne({ projectId, isActive: true })
     if (!project && mongoose.isValidObjectId(projectId)) {
         project = await Project.findById(projectId)
     }
@@ -184,13 +170,18 @@ export async function DELETE(
 
         await connectDB()
 
-        let project = await Project.findOne({ projectId })
+        let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
             project = await Project.findById(projectId)
         }
 
         if (!project) {
             return NextResponse.json({ message: "Không tìm thấy dự án" }, { status: 404 })
+        }
+
+        // Kiểm tra nếu project đã bị xóa mềm
+        if (project.isActive === false) {
+            return NextResponse.json({ message: "Dự án đã bị xóa trước đó" }, { status: 400 })
         }
 
         if (!project.owner?.userId?.equals(userId)) {
@@ -208,14 +199,13 @@ export async function DELETE(
             )
         )
 
-// Xóa dữ liệu liên quan trước để tránh tài liệu không rõ nguồn gốc.
-// Giữ lại nhật ký kiểm toán DELETE_PROJECT bằng cách xóa các nhật ký hiện có trước khi tạo nhật ký mới.
-        await Promise.all([
-            Task.deleteMany({ projectId: project._id }),
-            ProjectInvite.deleteMany({ projectId: project._id }),
-            ActivityLog.deleteMany({ projectId: project._id }),
-        ])
+        // Soft delete: Chỉ cập nhật isActive = false
+        await Project.updateOne(
+            { _id: project._id },
+            { $set: { isActive: false } }
+        )
 
+        // Log hoạt động xóa (đã có sẵn trong code của bạn)
         try {
             await ActivityLog.create({
                 userId: new mongoose.Types.ObjectId(userId),
@@ -238,9 +228,7 @@ export async function DELETE(
             // ignore audit log errors
         }
 
-        await Project.deleteOne({ _id: project._id })
-
-        return NextResponse.json({ success: true })
+        return NextResponse.json({ success: true, message: "Đã xóa dự án" })
     } catch {
         return NextResponse.json(
             { message: "Không thể xóa dự án" },
