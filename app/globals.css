@@ -46,7 +46,19 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 }
+.recharts-wrapper,
+.recharts-surface,
+.recharts-surface:focus,
+.recharts-surface:focus-visible,
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
 
+.recharts-surface {
+  -webkit-tap-highlight-color: transparent;
+}
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

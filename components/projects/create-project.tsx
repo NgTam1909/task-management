@@ -52,7 +52,7 @@ export default function CreateProject({ onSuccessAction }: CreateProjectProps) {
             onSuccessAction?.()
         } catch (err: unknown) {
             const payload = (err as { response?: { data?: { message?: string } } })?.response?.data
-            setError(payload?.message ?? "Táº¡o dá»± Ã¡n tháº¥t báº¡i")
+            setError(payload?.message ?? "tạo dự án thất bại")
         }
     }
 
@@ -79,7 +79,6 @@ export default function CreateProject({ onSuccessAction }: CreateProjectProps) {
                             </FormItem>
                         )}
                     />
-
                     {/* Description */}
                     <FormField
                         control={form.control}

@@ -5,10 +5,32 @@ import Project, { IProjectMember } from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
 import { updateProjectSchema } from "@/lib/validations/project.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
-import Task from "@/models/task.model"
-import ProjectInvite from "@/models/projectInvite.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
 
+function slugify(input: string) {
+    const normalized = input
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+
+    return normalized || "project"
+}
+
+async function generateProjectId(title: string) {
+    const base = slugify(title)
+    let projectId = base
+    let counter = 1
+
+    while (await Project.exists({ projectId })) {
+        projectId = `${base}-${counter}`
+        counter += 1
+    }
+
+    return projectId
+}
 async function findProjectByParam(projectId: string) {
     let project = await Project.findOne({ projectId, isActive: true })
     if (!project && mongoose.isValidObjectId(projectId)) {
@@ -111,11 +133,16 @@ export async function PATCH(
 
         const oldValue = {
             title: project.title,
+            projectId: project.projectId ?? "",
             description: project.description ?? "",
             isPublic: project.isPublic,
         }
-
+        let finalProjectId = project.projectId
+        if (parsed.data.projectId && parsed.data.projectId !== project.projectId) {
+            finalProjectId = await generateProjectId(parsed.data.projectId)
+        }
         project.title = parsed.data.title
+        project.projectId = finalProjectId
         project.description = parsed.data.description ?? ""
         project.isPublic = parsed.data.visibility === "public"
         await project.save()

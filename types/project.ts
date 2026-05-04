@@ -57,6 +57,7 @@ export type InviteInfo = {
 
 export type ProjectDetail = {
     title: string
+    projectId?: string
     description?: string
     isPublic: boolean
 }

@@ -88,7 +88,7 @@ export async function GET(
                           userDoc && typeof userDoc === "object" && "_id" in userDoc
                               ? {
                                     id: userDoc._id?.toString?.() ?? "",
-                                    name: `${userDoc.firstName ?? ""} ${userDoc.lastName ?? ""}`.trim(),
+                                    name: `${userDoc.lastName ?? ""} ${userDoc.firstName ?? ""}`.trim(),
                                     email: userDoc.email ?? null,
                                 }
                               : null

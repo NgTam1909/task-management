@@ -126,21 +126,32 @@ export function useStats(tasks: Task[]) {
     const filteredTasks = useMemo(() => {
         const now = new Date()
 
-        if (listFilter.kind === "all") return tasks
+        // Bước 1: Lọc theo tháng nếu có selectedMonth
+        let monthFilteredTasks = tasks
+        if (selectedMonth) {
+            monthFilteredTasks = tasks.filter((t) => {
+                if (!t.createdAt) return false
+                return monthKeyFromDate(new Date(t.createdAt)) === selectedMonth
+            })
+        }
+
+        // Bước 2: Lọc theo filter (all/done/cancelled/overdue/status)
+        if (listFilter.kind === "all") return monthFilteredTasks
         if (listFilter.kind === "done") {
-            return tasks.filter((t) => t.status === "done")
+            return monthFilteredTasks.filter((t) => t.status === "done")
         }
         if (listFilter.kind === "cancelled") {
-            return tasks.filter((t) => t.status === "cancelled")
+            return monthFilteredTasks.filter((t) => t.status === "cancelled")
         }
         if (listFilter.kind === "status") {
-            return tasks.filter((t) => t.status === listFilter.status)
+            return monthFilteredTasks.filter((t) => t.status === listFilter.status)
+        }
+        if (listFilter.kind === "overdue") {
+            return monthFilteredTasks.filter((t) => isTaskOverdue(t, now))
         }
 
-        // overdue
-        return tasks.filter((t) => isTaskOverdue(t, now))
-    }, [tasks, listFilter])
-
+        return monthFilteredTasks
+    }, [tasks, listFilter, selectedMonth])
     return {
         currentMonth,
         selectedMonth,

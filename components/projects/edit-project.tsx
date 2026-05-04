@@ -38,6 +38,7 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
         resolver: zodResolver(updateProjectSchema),
         defaultValues: {
             title: "",
+            projectId: "",
             description: "",
             visibility: "private",
         },
@@ -57,6 +58,7 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
                 if (!active) return
                 form.reset({
                     title: data.title ?? "",
+                    projectId: data.projectId ?? "",
                     description: data.description ?? "",
                     visibility: data.isPublic ? "public" : "private",
                 })
@@ -112,7 +114,22 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
                                 </FormItem>
                             )}
                         />
-
+                        <FormField
+                            control={form.control}
+                            name="projectId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Mã dự án</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="VD: DA001, PROJECT-ABC, ..."
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="description"

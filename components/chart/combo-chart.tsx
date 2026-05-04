@@ -91,17 +91,18 @@ export default function TaskMonthlyChart({
                 />
 
                 <Tooltip
+                    cursor={false}
                     content={({ active, payload, label }) => {
                         if (!active || !payload?.length) return null
 
                         return (
-                            <div className="bg-white rounded-lg border p-3 shadow-md">
+                            <div className=" bg-background rounded-lg border p-3 shadow-md">
                                 <p className="font-semibold mb-2">{label}</p>
 
                                 {payload.map((entry, index) => {
                                     const safeColor =
                                         entry.color === "#f3f4f6"
-                                            ? "#374151"
+                                            ? "#6d87ed"
                                             : entry.color
 
                                     return (
@@ -129,17 +130,19 @@ export default function TaskMonthlyChart({
                     iconType="circle"
                     iconSize={10}
                     formatter={(value) => (
-                        <span style={{ color: '#4b5563', fontWeight: 500 }}>
+                        <span style={{ color: '#5192f1', fontWeight: 500 }}>
                 {value}
             </span>
                     )}
                 />
 
                 <Bar
-                    dataKey="overdueSafe"
+                    dataKey="pending"
                     stackId="a"
-                    fill="#ef4444"
-                    name="Task quá hạn"
+                    fill="#f3f4f6"
+                    name="Task cần làm"
+                    stroke="#9ca3af"
+                    strokeWidth={1}
                     barSize={36}
                     radius={[4, 4, 0, 0]}
                     cursor="pointer"
@@ -158,12 +161,10 @@ export default function TaskMonthlyChart({
                 />
 
                 <Bar
-                    dataKey="pending"
+                    dataKey="overdueSafe"
                     stackId="a"
-                    fill="#f3f4f6"
-                    stroke="#9ca3af"
-                    strokeWidth={1}
-                    name="Task cần làm"
+                    fill="#ef4444"
+                    name="Task quá hạn"
                     radius={[4, 4, 0, 0]}
                 />
             </BarChart>

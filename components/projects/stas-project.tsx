@@ -149,7 +149,7 @@ export default function AdvancedDashboard({ projectId }: Props) {
                 </Card>
 
                 {/* MONTHLY */}
-                <Card className="rounded-2xl">
+                <Card className="rounded-2xl ">
                     <CardHeader>
                         <CardTitle>Tiến độ dự án</CardTitle>
                         <p className="text-sm text-muted-foreground">
