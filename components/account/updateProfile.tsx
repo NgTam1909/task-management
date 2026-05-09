@@ -32,11 +32,9 @@ type Props = {
     phoneValue?: string
     setPhoneValueAction?: (v: string) => void
 
-    positionValue: string
-    setPositionValueAction: (v: string) => void
-
-    skillsValue: string
-    setSkillsValueAction: (v: string) => void
+    // ✅ Thay thế position và skills bằng addressValue
+    addressValue?: string
+    setAddressValueAction?: (v: string) => void
 
     profileError: string | null
     profileSuccess: string | null
@@ -57,7 +55,7 @@ export default function UpdateProfileDialog(props: Props) {
             >
                 <DialogHeader className="flex-shrink-0 pb-2 sm:pb-4">
                     <DialogTitle className="text-lg sm:text-xl">
-                        Cập nhật thông tin cá nhân
+                        {props.title || "Cập nhật thông tin cá nhân"}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -79,7 +77,7 @@ export default function UpdateProfileDialog(props: Props) {
                             )}
                         </div>
 
-                        {/* Form 2 cột trên màn hình lớn */}
+                        {/* Form Họ và Tên */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                             {props.setLastNameValueAction && (
                                 <div className="space-y-2">
@@ -120,37 +118,27 @@ export default function UpdateProfileDialog(props: Props) {
                             </div>
                         )}
 
-                        {/* Vị trí và Kỹ năng */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        {/* ✅ Thay thế Vị trí/Kỹ năng bằng Địa chỉ */}
+                        {props.setAddressValueAction && (
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium">Vị trí</Label>
+                                <Label className="text-sm font-medium">Địa chỉ</Label>
                                 <Input
-                                    value={props.positionValue}
-                                    onChange={(e) => props.setPositionValueAction(e.target.value)}
+                                    value={props.addressValue ?? ""}
+                                    onChange={(e) => props.setAddressValueAction?.(e.target.value)}
                                     className="w-full"
-                                    placeholder="Nhập vị trí công việc"
+                                    placeholder="Nhập địa chỉ của bạn"
                                 />
                             </div>
+                        )}
 
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium">Kỹ năng</Label>
-                                <Input
-                                    value={props.skillsValue}
-                                    onChange={(e) => props.setSkillsValueAction(e.target.value)}
-                                    className="w-full"
-                                    placeholder="Nhập kỹ năng"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Thông báo */}
+                        {/* Thông báo lỗi/thành công */}
                         {props.profileError && (
-                            <div className="text-xs sm:text-sm text-red-500 bg-red-50 rounded-md p-2 sm:p-3 break-words">
+                            <div className="text-xs sm:text-sm text-red-500 bg-red-50 rounded-md p-2 sm:p-3 break-words border border-red-100">
                                 {props.profileError}
                             </div>
                         )}
                         {props.profileSuccess && (
-                            <div className="text-xs sm:text-sm text-green-600 bg-green-50 rounded-md p-2 sm:p-3 break-words">
+                            <div className="text-xs sm:text-sm text-green-600 bg-green-50 rounded-md p-2 sm:p-3 break-words border border-green-100">
                                 {props.profileSuccess}
                             </div>
                         )}
@@ -164,7 +152,7 @@ export default function UpdateProfileDialog(props: Props) {
                         disabled={props.profileSaving}
                         className="w-full sm:w-auto"
                     >
-                        Đóng
+                        Hủy
                     </Button>
                     <Button
                         onClick={props.onSaveAction}

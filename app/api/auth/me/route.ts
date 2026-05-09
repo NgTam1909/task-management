@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { connectDB } from "@/lib/db"
 import User from "@/models/user.model"
 import { updateProfileSchema } from "@/lib/validations/auth.validation"
-import {getUserIdFromRequest} from "@/lib/jwt";
+import { getUserIdFromRequest } from "@/lib/jwt";
 
 export async function GET(req: NextRequest) {
     try {
@@ -13,13 +13,18 @@ export async function GET(req: NextRequest) {
 
         await connectDB()
 
+        // Thay đổi: Lấy trường "address", loại bỏ "position" và "skills"
         const user = await User.findById(userId).select(
-            "firstName lastName phone email isGod position skills"
+            "firstName lastName phone email isGod address"
         )
 
+        if (!user) {
+            return NextResponse.json({ message: "User không tồn tại" }, { status: 404 })
+        }
+
         return NextResponse.json(user)
-    } catch {
-        return NextResponse.json({ message: "Invalid token" }, { status: 401 })
+    } catch (error) {
+        return NextResponse.json({ message: "Lỗi hệ thống" }, { status: 500 })
     }
 }
 
@@ -31,7 +36,11 @@ export async function PATCH(req: NextRequest) {
         }
 
         const body = await req.json().catch(() => ({}))
+
+        // Lưu ý: Bạn cần cập nhật updateProfileSchema trong file auth.validation.ts
+        // để hỗ trợ trường "address" (string) thay vì skills/position.
         const parsed = updateProfileSchema.safeParse(body)
+
         if (!parsed.success) {
             return NextResponse.json(
                 { message: "Lỗi xác thực", errors: parsed.error.flatten().fieldErrors },
@@ -39,54 +48,40 @@ export async function PATCH(req: NextRequest) {
             )
         }
 
-        const update: Record<string, unknown> = {}
-        const unset: Record<string, unknown> = {}
+        const update: Record<string, any> = {}
 
-        const hasFirstName = Object.prototype.hasOwnProperty.call(body ?? {}, "firstName")
-        const hasLastName = Object.prototype.hasOwnProperty.call(body ?? {}, "lastName")
-        const hasPhone = Object.prototype.hasOwnProperty.call(body ?? {}, "phone")
-        const hasPosition = Object.prototype.hasOwnProperty.call(body ?? {}, "position")
-        const hasSkills = Object.prototype.hasOwnProperty.call(body ?? {}, "skills")
+        // Danh sách các trường cho phép cập nhật
+        const fields = ["firstName", "lastName", "phone", "address"]
 
-        if (hasFirstName && typeof parsed.data.firstName === "string") {
-            update.firstName = parsed.data.firstName.trim()
-        }
+        fields.forEach(field => {
+            // Kiểm tra xem trường đó có xuất hiện trong body gửi lên không
+            if (Object.prototype.hasOwnProperty.call(body, field)) {
+                const val = parsed.data[field as keyof typeof parsed.data]
 
-        if (hasLastName && typeof parsed.data.lastName === "string") {
-            update.lastName = parsed.data.lastName.trim()
-        }
-
-        if (hasPhone && typeof parsed.data.phone === "string") {
-            update.phone = parsed.data.phone.trim()
-        }
-
-        if (hasPosition) {
-            if (typeof parsed.data.position === "string" && parsed.data.position.trim().length > 0) {
-                update.position = parsed.data.position.trim()
-            } else {
-                unset.position = ""
+                // Nếu là string, trim khoảng trắng. Nếu trống thì gán chuỗi rỗng.
+                if (typeof val === "string") {
+                    update[field] = val.trim()
+                } else {
+                    update[field] = val
+                }
             }
-        }
+        })
 
-        if (hasSkills) {
-            if (Array.isArray(parsed.data.skills)) {
-                update.skills = parsed.data.skills
-            } else {
-                // Xóa skill khỏi giao diện người dùng dưới dạng chuỗi rỗng -> không xác định sau khi xử lý trước.
-                update.skills = []
-            }
+        if (Object.keys(update).length === 0) {
+            return NextResponse.json({ message: "Không có dữ liệu thay đổi" }, { status: 400 })
         }
 
         await connectDB()
 
         const nextUser = await User.findByIdAndUpdate(
             userId,
-            Object.keys(unset).length > 0 ? { $set: update, $unset: unset } : { $set: update },
-            { new: true }
-        ).select("firstName lastName phone email isGod position skills")
+            { $set: update },
+            { returnDocument: 'after', runValidators: true } // ✅ Dùng returnDocument: 'after'
+        ).select("firstName lastName phone email isGod address")
 
         return NextResponse.json({ success: true, user: nextUser })
-    } catch {
+    } catch (error) {
+        console.error("PATCH Error:", error)
         return NextResponse.json({ message: "Lỗi server" }, { status: 500 })
     }
 }

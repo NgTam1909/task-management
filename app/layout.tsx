@@ -1,6 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lora, Roboto_Slab } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const robotoSlabHeading = Roboto_Slab({subsets:['latin'],variable:'--font-heading'});
+
+const lora = Lora({subsets:['latin'],variable:'--font-serif'});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-serif", lora.variable, robotoSlabHeading.variable)}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

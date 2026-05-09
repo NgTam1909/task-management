@@ -7,9 +7,7 @@ export interface IUser extends Document {
     phone: string;
     email: string;
     password: string;
-    position?: string;
-    skills: string[];
-    address?: mongoose.Types.ObjectId[];
+    address?: string;
     isGod: boolean;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
@@ -53,42 +51,11 @@ const UserSchema = new Schema<IUser>(
             select: false, // không trả về mặc định
         },
 
-        position: {
+        address: {
             type: String,
             trim: true,
             maxlength: 100,
         },
-
-        skills: {
-            type: [String],
-            default: [],
-            set: (value: unknown) => {
-                if (!Array.isArray(value)) return []
-
-                // Normalize: trim, drop empty, dedupe case-insensitively (keep first occurrence)
-                const seen = new Set<string>()
-                const normalized: string[] = []
-
-                for (const item of value) {
-                    const raw = typeof item === "string" ? item : String(item ?? "")
-                    const trimmed = raw.trim()
-                    if (!trimmed) continue
-                    const key = trimmed.toLowerCase()
-                    if (seen.has(key)) continue
-                    seen.add(key)
-                    normalized.push(trimmed)
-                }
-
-                return normalized
-            },
-        },
-
-        address: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Address",
-            },
-        ],
 
         isGod: {
             type: Boolean,
@@ -126,9 +93,6 @@ UserSchema.methods.comparePassword = async function (
 ): Promise<boolean> {
     return bcrypt.compare(candidate, this.password);
 };
-
-UserSchema.index({ position: 1 });
-UserSchema.index({ skills: 1 });
 
 const User: Model<IUser> =
     mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

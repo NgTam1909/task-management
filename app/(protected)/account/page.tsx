@@ -32,11 +32,7 @@ function parseUser(value: unknown): IUser | null {
         lastName,
         phone,
         email,
-        position: typeof value.position === "string" ? value.position : undefined,
-        skills: parseStringArray(value.skills),
-        address: Array.isArray(value.address)
-            ? (value.address as Array<{ _id: string; street?: string; city?: string }>)
-            : undefined,
+        address: typeof value.address === "string" ? value.address : undefined,
         isGod,
         createdAt: typeof value.createdAt === "string" ? value.createdAt : undefined,
         updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : undefined,
@@ -88,8 +84,7 @@ export default function AccountPage() {
             firstName: data.firstName,
             lastName: data.lastName,
             phone: data.phone,
-            position: data.position,
-            skills: data.skills,
+            address: data.address,
         }
 
         const res = (await PATCH_METHOD("/api/auth/me", payload)) as unknown

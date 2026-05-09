@@ -5,9 +5,7 @@ export interface IUser {
     lastName: string
     phone: string
     email: string
-    position?: string
-    skills: string[]
-    address?: Array<{ _id: string; street?: string; city?: string }>
+    address?:string
     isGod: boolean
     createdAt?: Date | string
     updatedAt?: Date | string

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import UpdateProfileDialog from "@/components/account/updateProfile"
-import { Briefcase, Mail, MapPin, Phone, User } from "lucide-react"
+import { Mail, MapPin, Phone, User } from "lucide-react"
 import { IUser } from "@/types/user"
 
 interface UserProfileProps {
@@ -28,10 +28,9 @@ export default function UserProfile({ user, isEditable = false, onSave }: UserPr
             firstName: user.firstName,
             lastName: user.lastName,
             phone: user.phone,
-            position: user.position || "",
-            skills: user.skills.join(", "),
+            address: user.address || "", // Address bây giờ là string
         }),
-        [user.firstName, user.lastName, user.phone, user.position, user.skills]
+        [user.firstName, user.lastName, user.phone, user.address]
     )
     const [formData, setFormData] = useState(initialFormData)
     const [isLoading, setIsLoading] = useState(false)
@@ -57,18 +56,15 @@ export default function UserProfile({ user, isEditable = false, onSave }: UserPr
 
         setIsLoading(true)
         setProfileError(null)
-        setProfileSuccess(null)
         try {
             await onSave({
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 phone: formData.phone,
-                position: formData.position,
-                skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
+                address: formData.address,
             })
             setEditOpen(false)
         } catch (error) {
-            console.error("Failed to save profile:", error)
             setProfileError("Lưu thất bại. Vui lòng thử lại.")
         } finally {
             setIsLoading(false)
@@ -84,12 +80,9 @@ export default function UserProfile({ user, isEditable = false, onSave }: UserPr
     return (
         <div className="container mx-auto max-w-5xl p-3 sm:p-6">
             <Card className="overflow-hidden">
-                {/* ✅ Header responsive stack */}
                 <CardHeader>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Avatar + info - responsive */}
                         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-                            {/* Avatar responsive size */}
                             <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                                 <AvatarFallback className="text-lg sm:text-2xl bg-primary text-primary-foreground">
                                     {getInitials()}
@@ -112,22 +105,16 @@ export default function UserProfile({ user, isEditable = false, onSave }: UserPr
                             </div>
                         </div>
 
-                        {/* Edit button */}
                         {isEditable && (
                             <Button
-                                onClick={() => {
-                                    setFormData(initialFormData)
-                                    setEditOpen(true)
-                                    setProfileError(null)
-                                    setProfileSuccess(null)
-                                }}
+                                onClick={() => setEditOpen(true)}
                                 variant="outline"
                                 disabled={!onSave}
                                 size="sm"
                                 className="w-full sm:w-auto"
                             >
                                 <User className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                Chỉnh sửa
+                                Chỉnh sửa hồ sơ
                             </Button>
                         )}
                     </div>
@@ -136,113 +123,65 @@ export default function UserProfile({ user, isEditable = false, onSave }: UserPr
                 <Separator />
 
                 <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
-                    {/* ✅ Tabs responsive - tránh bị dồn */}
                     <Tabs defaultValue="info" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 h-auto p-1 mb-4 sm:mb-6">
+                        <TabsList className="grid w-full grid-cols-2 h-auto p-1 mb-4 sm:mb-6">
                             <TabsTrigger value={"info"} className="text-xs sm:text-sm py-1.5 sm:py-2">
                                 Thông tin cá nhân
                             </TabsTrigger>
-                            <TabsTrigger value={"skills"} className="text-xs sm:text-sm py-1.5 sm:py-2">
-                                Vị trí và kỹ năng
-                            </TabsTrigger>
                             <TabsTrigger value="address" className="text-xs sm:text-sm py-1.5 sm:py-2">
-                                Địa chỉ
+                                Địa chỉ liên hệ
                             </TabsTrigger>
                         </TabsList>
 
-                        {/* ✅ Info tab - 1 cột trên mobile, 2 cột trên tablet/desktop */}
+                        {/* Tab thông tin cá nhân */}
                         <TabsContent value="info" className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <div className="space-y-1 sm:space-y-2">
-                                    <Label className="text-xs sm:text-sm">Họ</Label>
-                                    <div className="text-sm sm:text-base break-words">{user.lastName}</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div className="space-y-1">
+                                    <Label>Họ</Label>
+                                    <div className="text-sm sm:text-base font-medium">{user.lastName}</div>
                                 </div>
 
-                                <div className="space-y-1 sm:space-y-2">
-                                    <Label className="text-xs sm:text-sm">Tên</Label>
-                                    <div className="text-sm sm:text-base break-words">{user.firstName}</div>
+                                <div className="space-y-1">
+                                    <Label >Tên</Label>
+                                    <div className="text-sm sm:text-base font-medium">{user.firstName}</div>
                                 </div>
 
-                                <div className="space-y-1 sm:space-y-2">
-                                    <Label className="text-xs sm:text-sm">Số điện thoại</Label>
-                                    <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-                                        <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-                                        <span className="break-all">{user.phone}</span>
+                                <div className="space-y-1">
+                                    <Label>Số điện thoại</Label>
+                                    <div className="flex items-center gap-2 text-sm sm:text-base">
+                                        <Phone className="h-4 w-4 text-primary/70" />
+                                        <span>{user.phone}</span>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1 sm:space-y-2">
-                                    <Label className="text-xs sm:text-sm">Email</Label>
-                                    <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-                                        <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                                <div className="space-y-1">
+                                    <Label>Email tài khoản</Label>
+                                    <div className="flex items-center gap-2 text-sm sm:text-base">
+                                        <Mail className="h-4 w-4 text-primary/70" />
                                         <span className="break-all">{user.email}</span>
                                     </div>
                                 </div>
                             </div>
                         </TabsContent>
 
-                        {/* ✅ Skills tab */}
-                        <TabsContent value="skills" className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
-                            <div className="space-y-1 sm:space-y-2">
-                                <Label className="text-xs sm:text-sm">Vị trí</Label>
-                                <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-                                    <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-                                    <span>{user.position || "Chưa cập nhật"}</span>
+                        {/* Tab địa chỉ - Rút gọn */}
+                        <TabsContent value="address" className="pt-3 sm:pt-4">
+                            <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border">
+                                <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                                <div className="space-y-1">
+                                    <Label>Địa chỉ hiện tại</Label>
+                                    <p className="text-sm sm:text-base break-words leading-relaxed">
+                                        {user.address || "Chưa cập nhật thông tin địa chỉ"}
+                                    </p>
                                 </div>
                             </div>
-
-                            <div className="space-y-1 sm:space-y-2">
-                                <Label className="text-xs sm:text-sm">Kỹ năng</Label>
-                                {/* ✅ Skills badge wrap tốt, không tràn */}
-                                <div className="flex flex-wrap gap-1.5 sm:gap-2 max-w-full">
-                                    {user.skills.length > 0 ? (
-                                        user.skills.map((skill, index) => (
-                                            <Badge key={index} variant="secondary" className="text-xs">
-                                                {skill}
-                                            </Badge>
-                                        ))
-                                    ) : (
-                                        <span className="text-xs sm:text-sm text-muted-foreground">
-                                            Chưa có kỹ năng
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </TabsContent>
-
-                        {/* ✅ Address tab - responsive layout */}
-                        <TabsContent value="address" className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
-                            {user.address && user.address.length > 0 ? (
-                                user.address.map((addr) => (
-                                    <Card key={addr._id} className="overflow-hidden">
-                                        <CardContent className="p-3 sm:p-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                                                <div className="flex items-start gap-2 min-w-0">
-                                                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm sm:text-base break-words">{addr.street}</p>
-                                                        <p className="text-xs sm:text-sm text-muted-foreground break-words">
-                                                            {addr.city}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))
-                            ) : (
-                                <div className="text-center py-6 sm:py-8 text-muted-foreground">
-                                    <MapPin className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
-                                    <p className="text-sm sm:text-base">Chưa có địa chỉ</p>
-                                </div>
-                            )}
                         </TabsContent>
                     </Tabs>
                 </CardContent>
             </Card>
 
             <UpdateProfileDialog
-                title="Quản lý trang cá nhân"
+                title="Cập nhật hồ sơ"
                 open={editOpen}
                 onOpenChangeAction={(open) => {
                     setEditOpen(open)
@@ -258,10 +197,8 @@ export default function UserProfile({ user, isEditable = false, onSave }: UserPr
                 setLastNameValueAction={(v) => setFormData({ ...formData, lastName: v })}
                 phoneValue={formData.phone}
                 setPhoneValueAction={(v) => setFormData({ ...formData, phone: v })}
-                positionValue={formData.position}
-                setPositionValueAction={(v) => setFormData({ ...formData, position: v })}
-                skillsValue={formData.skills}
-                setSkillsValueAction={(v) => setFormData({ ...formData, skills: v })}
+                addressValue={formData.address}
+                setAddressValueAction={(v) => setFormData({ ...formData, address: v })}
                 profileError={profileError}
                 profileSuccess={profileSuccess}
                 onSaveAction={handleSave}

@@ -12,10 +12,12 @@ export function useUpdateProfile(open: boolean) {
     const [profileSaving, setProfileSaving] = useState(false)
     const [profileError, setProfileError] = useState<string | null>(null)
     const [profileSuccess, setProfileSuccess] = useState<string | null>(null)
+
     const [profileEmail, setProfileEmail] = useState<string>("")
     const [profileName, setProfileName] = useState<string>("")
-    const [positionValue, setPositionValue] = useState<string>("")
-    const [skillsValue, setSkillsValue] = useState<string>("")
+
+    // ✅ Thay đổi: Xóa position/skills, thêm addressValue
+    const [addressValue, setAddressValue] = useState<string>("")
 
     useEffect(() => {
         if (!open) {
@@ -35,26 +37,16 @@ export function useUpdateProfile(open: boolean) {
                 const user = (await GET_METHOD("/api/auth/me")) as unknown
                 if (!active) return
 
-                const firstName =
-                    isRecord(user) && typeof user.firstName === "string" ? user.firstName : ""
-                const lastName =
-                    isRecord(user) && typeof user.lastName === "string" ? user.lastName : ""
+                if (isRecord(user)) {
+                    const firstName = typeof user.firstName === "string" ? user.firstName : ""
+                    const lastName = typeof user.lastName === "string" ? user.lastName : ""
 
-                setProfileName(`${lastName} ${firstName}`.trim())
-                setProfileEmail(isRecord(user) && typeof user.email === "string" ? user.email : "")
+                    setProfileName(`${lastName} ${firstName}`.trim())
+                    setProfileEmail(typeof user.email === "string" ? user.email : "")
 
-                setPositionValue(
-                    isRecord(user) && typeof user.position === "string" ? user.position : ""
-                )
-
-                const skills =
-                    isRecord(user) && Array.isArray(user.skills)
-                        ? (user.skills as unknown[])
-                        : []
-
-                setSkillsValue(
-                    skills.filter((s: unknown) => typeof s === "string").join(", ")
-                )
+                    // ✅ Lấy dữ liệu address dưới dạng string từ API
+                    setAddressValue(typeof user.address === "string" ? user.address : "")
+                }
             } catch {
                 if (active) setProfileError("Không thể tải thông tin tài khoản")
             } finally {
@@ -75,9 +67,9 @@ export function useUpdateProfile(open: boolean) {
             setProfileError(null)
             setProfileSuccess(null)
 
+            // ✅ Gửi payload chỉ chứa address
             const res = (await PATCH_METHOD("/api/auth/me", {
-                position: positionValue,
-                skills: skillsValue,
+                address: addressValue,
             })) as unknown
 
             if (isRecord(res) && res.success === false) {
@@ -85,7 +77,7 @@ export function useUpdateProfile(open: boolean) {
                 return
             }
 
-            setProfileSuccess("Đã cập nhật thông tin tài khoản")
+            setProfileSuccess("Đã cập nhật thông tin tài khoản thành công")
         } catch (err: unknown) {
             const payload = (err as { response?: { data?: { message?: string } } })?.response?.data
             setProfileError(payload?.message ?? "Cập nhật thất bại")
@@ -101,10 +93,8 @@ export function useUpdateProfile(open: boolean) {
         profileSuccess,
         profileEmail,
         profileName,
-        positionValue,
-        setPositionValue,
-        skillsValue,
-        setSkillsValue,
+        addressValue,
+        setAddressValue,
         handleSaveProfile,
     }
 }
