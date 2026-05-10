@@ -93,9 +93,9 @@ export default function InvitePage() {
     return (
         <div className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center gap-6 p-6">
             <div className="space-y-2">
-                <h1 className="text-2xl font-semibold">Project invitation</h1>
+                <h1 className="text-2xl font-semibold">Thư mời tham gia dự án</h1>
                 <p className="text-sm text-muted-foreground">
-                    Accept this invitation to join the project.
+                    Hãy chấp nhận lời mời này để tham gia dự án..
                 </p>
             </div>
 
@@ -119,7 +119,7 @@ export default function InvitePage() {
                     {!isAuthed && (
                         <div className="space-y-2">
                             <p className="text-sm text-muted-foreground">
-                                Please log in with the invited email to accept.
+                                Vui lòng đăng nhập bằng email được mời để xác nhận tham gia.
                             </p>
                             <Button asChild>
                                 <Link href={redirectUrl}>Go to login</Link>
@@ -138,7 +138,7 @@ export default function InvitePage() {
                             {info.projectId && success && (
                                 <Button asChild variant="outline">
                                     <Link href={`/project/${info.projectId}/tasks`}>
-                                        Go to project
+                                        Đi tới dự án
                                     </Link>
                                 </Button>
                             )}

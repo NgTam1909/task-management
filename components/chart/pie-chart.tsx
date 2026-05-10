@@ -6,6 +6,7 @@ const COLOR_MAP = {
     backlog: "#fbbf24",
     todo: "#60a5fa",
     inprogress: "#a78bfa",
+    pending_review: "#f130e7",
     done: "#34d399",
     cancelled: "#cbd5e1",
 }

@@ -8,6 +8,7 @@ export type MonthlyItem = {
 }
 export type StatsListFilter =
     | { kind: "all" }
+    | { kind: "review" }
     | { kind: "done" }
     | { kind: "overdue" }
     | { kind: "cancelled" }

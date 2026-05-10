@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import {JwtPayload} from "@/types/jwt";
 import { jwtVerify } from "jose"
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 export async function getUserIdFromRequest(req: NextRequest) {

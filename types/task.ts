@@ -4,6 +4,7 @@ export enum TaskStatus {
     BACKLOG = "backlog",
     TODO = "todo",
     IN_PROGRESS = "inprogress",
+    PENDING_REVIEW = "pending_review",
     DONE = "done",
     CANCELLED = "cancelled",
 }
@@ -22,6 +23,7 @@ export interface Task {
     title: string;
     status: TaskStatus;
     description?: string;
+    creatorId: string;
     assignees?: string[];
     assigneeIds?: string[];
     labels?: string[];

@@ -114,7 +114,9 @@ export function useStats(tasks: Task[]) {
             getTaskOverDue(task, now).isOverdue
         ).length
     }, [tasks])
-
+    const pendingReviewCount = useMemo(() => {
+        return tasks.filter((t) => t.status === "pending_review").length
+    }, [tasks])
     const completedCount = useMemo(() => {
         return tasks.filter((t) => t.status === "done").length
     }, [tasks])
@@ -143,6 +145,9 @@ export function useStats(tasks: Task[]) {
         if (listFilter.kind === "cancelled") {
             return monthFilteredTasks.filter((t) => t.status === "cancelled")
         }
+        if (listFilter.kind === "review") {
+            return monthFilteredTasks.filter((t) => t.status === "pending_review")
+        }
         if (listFilter.kind === "status") {
             return monthFilteredTasks.filter((t) => t.status === listFilter.status)
         }
@@ -165,5 +170,6 @@ export function useStats(tasks: Task[]) {
         completedCount,
         overdueCount,
         cancelledCount,
+        pendingReviewCount,
     }
 }

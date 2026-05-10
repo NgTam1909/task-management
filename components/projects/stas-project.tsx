@@ -9,7 +9,7 @@ import { GET_METHOD } from "@/lib/req"
 import { useStats } from "@/hooks/useStats"
 import { ApiResponse } from "@/types/project"
 import { Task } from "@/types/task"
-import { CheckCircle2, Clock3, ListTodo } from "lucide-react"
+import { CheckCircle2, Clock3, ListTodo, CircleX, CircleDashed } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toTask } from "@/lib/mappers/task"
 import { TaskRow } from "@/components/tasks/task-row"
@@ -75,6 +75,7 @@ export default function AdvancedDashboard({ projectId }: Props) {
         completedCount,
         overdueCount,
         cancelledCount,
+        pendingReviewCount,
     } = useStats(tasks)
 
     const filterLabel =
@@ -86,12 +87,14 @@ export default function AdvancedDashboard({ projectId }: Props) {
                     ? "overdue"
                     : listFilter.kind === "cancelled"
                         ? "cancelled"
+                    :listFilter.kind === "review"
+                        ? "review"
                         : listFilter.status
 
     return (
         <div className="space-y-6">
             {/* STATS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                 <StatCard
                     title="Tổng công việc"
                     value={totalCount}
@@ -102,7 +105,13 @@ export default function AdvancedDashboard({ projectId }: Props) {
                         setSelectedMonth(null)
                     }}
                 />
-
+                <StatCard
+                    title="Chở xét duyệt"
+                    value={pendingReviewCount}
+                    icon={<CircleDashed className="h-5 w-5 text-orange-500" />}
+                    active={listFilter.kind === "review"}
+                    onClick={() => setListFilter({ kind: "review" })}
+                />
                 <StatCard
                     title="Đã hoàn thành"
                     value={completedCount}
@@ -121,7 +130,7 @@ export default function AdvancedDashboard({ projectId }: Props) {
                 <StatCard
                     title="Đã hủy"
                     value={cancelledCount}
-                    icon={<CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    icon={<CircleX className="h-5 w-5 text-red-500" />}
                     active={listFilter.kind === "cancelled"}
                     onClick={() => setListFilter({ kind: "cancelled" })}
                 />

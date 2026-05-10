@@ -73,16 +73,6 @@ export function TaskProperty({ task }: TaskDetailProps) {
                                                                 {user.email}
                                                             </p>
                                                         )}
-                                                        {user.position && (
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {user.position}
-                                                            </p>
-                                                        )}
-                                                        {user.skills && user.skills.length > 0 && (
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {user.skills.join(", ")}
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             ))

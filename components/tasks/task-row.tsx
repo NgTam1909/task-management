@@ -59,6 +59,9 @@ function statusLabel(status: TaskStatus) {
         case TaskStatus.IN_PROGRESS:
             return 'In progress'
 
+        case TaskStatus.PENDING_REVIEW:
+            return 'Pending review'
+
         case TaskStatus.DONE:
             return 'Done'
 

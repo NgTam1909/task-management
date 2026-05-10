@@ -12,6 +12,7 @@ const statusColumns: Array<{ title: string; status: TaskStatus }> = [
     { title: "Backlog", status: TaskStatus.BACKLOG },
     { title: "Todo", status: TaskStatus.TODO },
     { title: "In Progress", status: TaskStatus.IN_PROGRESS },
+    { title: "Pending review", status: TaskStatus.PENDING_REVIEW},
     { title: "Done", status: TaskStatus.DONE },
     { title: "Cancelled", status: TaskStatus.CANCELLED },
 ]

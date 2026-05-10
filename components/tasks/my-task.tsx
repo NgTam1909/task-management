@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import { getMyTasks } from '@/services/task.service'
 import { Task, PriorityLevel, TaskStatus } from '@/types/task'
 import { TaskRow } from '@/components/tasks/task-row'
@@ -38,12 +38,14 @@ function statusRank(status: TaskStatus) {
       return 0
     case TaskStatus.TODO:
       return 1
-    case TaskStatus.BACKLOG:
+    case TaskStatus.PENDING_REVIEW:
       return 2
-    case TaskStatus.DONE:
+    case TaskStatus.BACKLOG:
       return 3
-    case TaskStatus.CANCELLED:
+    case TaskStatus.DONE:
       return 4
+    case TaskStatus.CANCELLED:
+      return 5
     default:
       return 99
   }
@@ -81,37 +83,41 @@ export function MyTasks() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let mounted = true
+  const fetchTasks = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true)
+    setError(null)
 
-    async function load() {
-      setLoading(true)
-      setError(null)
-
-      try {
-        const res = await getMyTasks()
-        const nextTasks = Array.isArray(res?.tasks) ? res.tasks : []
-
-        if (mounted) {
-          setTasks(nextTasks)
-        }
-      } catch {
-        if (mounted) {
-          setError('Không thể tải danh sách công việc')
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    load()
-
-    return () => {
-      mounted = false
+    try {
+      const res = await getMyTasks()
+      const nextTasks = Array.isArray(res?.tasks) ? res.tasks : []
+      setTasks(nextTasks)
+    } catch {
+      setError('Không thể tải danh sách công việc')
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  // 2. Chạy lần đầu khi mount
+  useEffect(() => {
+    fetchTasks()
+  }, [fetchTasks])
+
+  // 3. Lắng nghe sự kiện để reload
+  useEffect(() => {
+    const handler = () => {
+      console.log("Sự kiện Task thay đổi -> Đang cập nhật danh sách...")
+      fetchTasks(true) // Load ngầm (silent) để không hiện loading spinner làm phiền người dùng
+    }
+
+    window.addEventListener("task:created", handler)
+    window.addEventListener("task:updated", handler)
+
+    return () => {
+      window.removeEventListener("task:created", handler)
+      window.removeEventListener("task:updated", handler)
+    }
+  }, [fetchTasks])
 
   const sortedTasks = useMemo(() => {
     return sortTasks(tasks)
@@ -129,7 +135,7 @@ export function MyTasks() {
 
   return (
       <section className="w-full py-2">
-        <div className="w-full overflow-x-auto">
+        <div className="w-full overflow-x-auto p-3">
           {/* Header */}
           <div className="hidden xl:grid grid-cols-[140px_1fr_100px_150px_160px] gap-2 border">
             <div className="px-4 py-2 text-sm text-center font-semibold">Mã</div>

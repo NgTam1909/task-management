@@ -89,7 +89,7 @@ export async function GET(
         })
     } catch {
         return NextResponse.json(
-            { message: "👉 Không thể lấy danh sách thành viên" },
+            { message: " Không thể lấy danh sách thành viên" },
             { status: 500 }
         )
     }

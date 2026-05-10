@@ -82,7 +82,7 @@ export function useProjectList() {
             return
         }
 
-        const ok = window.confirm("Delete this project? This cannot be undone.")
+        const ok = window.confirm("Xác định xóa dự án này? Thao tác không thể hoàn tác")
         if (!ok) return
 
         setDeletingId(projectId)

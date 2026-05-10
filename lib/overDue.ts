@@ -56,7 +56,8 @@ export function getTaskOverDue(
 
     const isFinished =
         task.status === TaskStatus.DONE ||
-        task.status === TaskStatus.CANCELLED
+        task.status === TaskStatus.CANCELLED||
+        task.status === TaskStatus.PENDING_REVIEW
 
     const isDueToday =
         !!dueDate &&

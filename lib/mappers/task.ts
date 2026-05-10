@@ -27,6 +27,7 @@ export function toTask(item: ApiTask, projectId?: string): Task {
         status: item.status as TaskStatus,
         priority,
         description: item.description ?? undefined,
+        creatorId: item.creatorId ?? undefined,
         assignees,
         labels: item.labels,
         startDate: item.startDate ?? undefined,

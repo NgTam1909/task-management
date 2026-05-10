@@ -10,6 +10,7 @@ export function buildAdvancedStats(tasks: Task[] = []) {
     backlog: 0,
     todo: 0,
     inprogress: 0,
+    pending_review: 0,
     done: 0,
     cancelled: 0,
   }
