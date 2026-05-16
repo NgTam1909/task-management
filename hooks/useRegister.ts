@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { POST_METHOD } from "@/lib/req"
 import {RegisterFormData} from "@/types/user";
+import {AuthService} from "@/services/auth.service";
 
 
 
@@ -35,57 +36,42 @@ export function useRegisterForm() {
     const toggleShowPassword = () => setShowPassword(!showPassword)
     const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword)
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (
+        e: React.FormEvent<HTMLFormElement>
+    ) => {
         e.preventDefault()
+
         setError(null)
         setSuccess(null)
         setFieldErrors({})
 
         if (form.password !== form.confirmPassword) {
-            const message = "Mật khẩu xác nhận không đúng!"
-            setFieldErrors((prev) => ({ ...prev, confirmPassword: message }))
-            setError(message)
+            setFieldErrors({
+                confirmPassword: "Mật khẩu xác nhận không đúng!",
+            })
             return
         }
 
         try {
             setLoading(true)
-            await POST_METHOD("/api/auth/register", form)
 
-            setSuccess("Đăng ký thành công! Đang chuyển sang trang đăng nhập ...")
+            await AuthService.register({
+                firstName: form.firstName,
+                lastName: form.lastName,
+                email: form.email,
+                phone: form.phone,
+                password: form.password,
+            })
+
+            setSuccess("Đăng ký thành công!")
 
             setTimeout(() => {
                 router.push("/login")
             }, 1500)
-        } catch (err: unknown) {
-            const payload = (err as { response?: { data?: unknown } })?.response?.data as
-                | {
-                message?: string
-                errors?: Partial<Record<keyof RegisterFormData, string[]>>
-            }
-                | undefined
 
-            const serverErrors = payload?.errors
-
-            if (serverErrors) {
-                const nextFieldErrors: Partial<Record<keyof RegisterFormData, string>> = {}
-                let firstMessage: string | undefined
-
-                for (const [field, messages] of Object.entries(serverErrors)) {
-                    if (messages && messages.length > 0) {
-                        const message = messages[0]
-                        nextFieldErrors[field as keyof RegisterFormData] = message
-                        if (!firstMessage) {
-                            firstMessage = message
-                        }
-                    }
-                }
-
-                setFieldErrors(nextFieldErrors)
-                setError(firstMessage || payload?.message || "Đăng ký thất bại!")
-            } else {
-                setError(payload?.message || "Đăng ký thất bại!")
-            }
+        } catch (err: any) {
+            setError(err.message)
+            setFieldErrors(err.errors || {})
         } finally {
             setLoading(false)
         }

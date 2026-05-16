@@ -38,7 +38,7 @@ export async function GET(
         const invite = await findInvite(token);
         if (!invite) {
             return NextResponse.json(
-                { message: "Invite is invalid or expired" },
+                { message: "Lời mời không hợp lệ hoặc quá hạn" },
                 { status: 404 }
             );
         }
@@ -47,7 +47,7 @@ export async function GET(
             "title projectId isPublic"
         );
         if (!project) {
-            return NextResponse.json({ message: "Project not found" }, { status: 404 });
+            return NextResponse.json({ message: "Không tìm thấy dự án" }, { status: 404 });
         }
 
         return NextResponse.json({
@@ -58,7 +58,7 @@ export async function GET(
         });
     } catch {
         return NextResponse.json(
-            { message: "Failed to load invite" },
+            { message: "Lời mời không thể tải" },
             { status: 500 }
         );
     }
@@ -84,26 +84,26 @@ export async function POST(
         const invite = await findInvite(token);
         if (!invite) {
             return NextResponse.json(
-                { message: "Invite is invalid or expired" },
+                { message: "Thư mời không hợp lệ hoặc đã hết hạn" },
                 { status: 404 }
             );
         }
 
         const user = await User.findById(userId).select("email");
         if (!user) {
-            return NextResponse.json({ message: "User not found" }, { status: 404 });
+            return NextResponse.json({ message: "Không tìm thấy người dùng" }, { status: 404 });
         }
-
         if (user.email?.toLowerCase() !== invite.email?.toLowerCase()) {
-            return NextResponse.json(
-                { message: "Email does not match the invitation" },
-                { status: 403 }
-            );
+            return NextResponse.json({
+                success: false,
+                forceLogout: true,
+                message: "Địa chỉ email không khớp với thư mời. Đang chuyển sang giao diện đăng nhập ..."
+            });
         }
 
         const project = await Project.findById(invite.projectId);
         if (!project) {
-            return NextResponse.json({ message: "Project not found" }, { status: 404 });
+            return NextResponse.json({ message: "Không tìm thấy dự án" }, { status: 404 });
         }
 
         const isMember =
@@ -146,7 +146,7 @@ export async function POST(
         });
     } catch {
         return NextResponse.json(
-            { message: "Failed to accept invite" },
+            { message: "Không thể chấp nhận lời mời" },
             { status: 500 }
         );
     }

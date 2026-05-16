@@ -10,7 +10,10 @@ export interface RegisterPayload {
     phone: string
     password: string
 }
-
+export interface ApiError {
+    message: string
+    errors?: Record<string, string>
+}
 export const AuthService = {
     async login(payload: LoginPayload) {
         const res = await fetch("/api/auth/login", {
@@ -31,24 +34,37 @@ export const AuthService = {
         return data
     },
 
-    async register(payload: RegisterPayload) {
-        const res = await fetch("/api/auth/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify(payload),
-        })
+        async register(payload: RegisterPayload) {
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            })
 
-        const data = await res.json()
+            const data = await res.json()
 
-        if (!res.ok) {
-            throw new Error(data.message || "Register failed")
-        }
+            if (!res.ok) {
+                const errors: Record<string, string> = {}
 
-        return data
-    },
+                if (data.errors) {
+                    Object.entries(data.errors).forEach(([field, messages]) => {
+                        if (Array.isArray(messages) && messages.length > 0) {
+                            errors[field] = messages[0]
+                        }
+                    })
+                }
+
+                throw {
+                    message: data.message || "Đăng ký thất bại",
+                    errors,
+                } as ApiError
+            }
+
+            return data
+        },
 
     async logout() {
         const res = await fetch("/api/auth/logout", {

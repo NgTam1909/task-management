@@ -44,7 +44,7 @@ export async function POST(
         const parsed = createInviteSchema.safeParse(body);
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid data", errors: parsed.error.flatten() },
+                { message: "Lỗi định dạng", errors: parsed.error.flatten() },
                 { status: 400 }
             );
         }

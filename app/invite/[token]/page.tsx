@@ -60,29 +60,79 @@ export default function InvitePage() {
 
     const handleAccept = async () => {
         if (!token) return;
+
         setAccepting(true);
         setError(null);
+
         try {
             const data = (await POST_METHOD(`/api/invites/${token}`, {})) as {
                 projectId?: string;
                 projectTitle?: string;
+                forceLogout?: boolean;
+                message?: string;
             };
-            setSuccess(data?.projectTitle ? `Joined ${data.projectTitle}` : "Invite accepted");
-            window.dispatchEvent(new Event('project:joined'));
+            if (data?.forceLogout) {
+                setError(data.message ?? "Sai tài khoản");
+
+                setTimeout(async () => {
+                    await POST_METHOD("/api/auth/logout", {});
+                    window.location.href =
+                        `/login?redirect=/invite/${token}&error=wrong-account`;
+                }, 3000);
+
+                return;
+            }
+
+            setSuccess(
+                data?.projectTitle
+                    ? `Joined ${data.projectTitle}`
+                    : "Lời mời đã được chấp nhận"
+            );
+
+            window.dispatchEvent(new Event("project:joined"));
+
             if (data?.projectId) {
                 setInfo((prev) =>
                     prev
                         ? {
-                              ...prev,
-                              projectId: data.projectId ?? prev.projectId,
-                          }
+                            ...prev,
+                            projectId: data.projectId ?? prev.projectId,
+                        }
                         : prev
                 );
             }
         } catch (err: unknown) {
-            const payload = (err as { response?: { data?: { message?: string } } })?.response
-                ?.data;
-            setError(payload?.message ?? "Failed to accept invite");
+            const payload = (
+                err as {
+                    response?: {
+                        status?: number;
+                        data?: {
+                            message?: string;
+                            forceLogout?: boolean;
+                        };
+                    };
+                }
+            )?.response;
+
+            // nếu backend yêu cầu logout
+            if (
+                payload?.status === 403 &&
+                payload?.data?.forceLogout
+            ) {
+                // gọi API logout
+                await POST_METHOD("/api/auth/logout", {});
+
+                // chuyển về login
+                window.location.href =
+                    `/login?redirect=/invite/${token}&error=wrong-account`;
+
+                return;
+            }
+
+            setError(
+                payload?.data?.message ??
+                "Không thể chấp nhận lời mời"
+            );
         } finally {
             setAccepting(false);
         }

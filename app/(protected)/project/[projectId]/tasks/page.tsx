@@ -110,9 +110,13 @@ export default function ProjectTaskListPage() {
         }
     }
 
-    const handleDrop = async (status: TaskStatus, event: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = async (
+        status: TaskStatus,
+        event: React.DragEvent<HTMLDivElement>
+    ) => {
         event.preventDefault()
         setDragOverStatus(null)
+
         const taskId = event.dataTransfer.getData("text/task-id")
         const fromStatus = event.dataTransfer.getData("text/task-status") as TaskStatus
 
@@ -121,6 +125,7 @@ export default function ProjectTaskListPage() {
         const task = tasks.find((item) => item.id === taskId)
         if (!task) return
 
+        // Validate frontend trước
         if (
             fromStatus === TaskStatus.BACKLOG &&
             status === TaskStatus.TODO &&
@@ -130,23 +135,30 @@ export default function ProjectTaskListPage() {
             return
         }
 
-        const previousStatus = task.status
-        setTasks((prev) => prev.map((item) => (item.id === taskId ? { ...item, status } : item)))
-
         try {
+            // Gọi backend trước
             await updateTask(taskId, { status })
-            window.dispatchEvent(new Event("task:updated"))
-        } catch (err: any) {
+
+            // Chỉ update UI nếu backend success
             setTasks((prev) =>
-                prev.map((item) => (item.id === taskId ? { ...item, status: previousStatus } : item))
+                prev.map((item) =>
+                    item.id === taskId
+                        ? { ...item, status }
+                        : item
+                )
             )
+
+            window.dispatchEvent(new Event("task:updated"))
+
+        } catch (err: any) {
             const msg =
                 err?.response?.data?.message ||
-                "Cập nhật trạng thái thất bại. Vui lòng thử lại."
+                "Cập nhật trạng thái thất bại."
+
             window.alert(msg)
+
         }
     }
-
     return (
         <div className="space-y-6">
             <section className="space-y-2">

@@ -84,7 +84,28 @@ export async function PATCH(
         }
 
         const data = parsed.data
-        // Subtask constraint: if parent is cancelled, children must remain cancelled.
+        // Member chỉ được thao tác task của mình
+        if (currentRole === ProjectRole.MEMBER) {
+            const isCreator =
+                task.creatorId?.toString() === userId
+
+            const isAssignee =
+                task.assignees?.some(
+                    (id: mongoose.Types.ObjectId) =>
+                        id.toString() === userId
+                ) ?? false
+
+            if (!isCreator && !isAssignee) {
+                return NextResponse.json(
+                    {
+                        message:
+                            "Bạn chỉ được thao tác với công việc do mình tạo hoặc được giao."
+                    },
+                    { status: 403 }
+                )
+            }
+        }
+// Ràng buộc nhiệm vụ con: nếu nhiệm vụ cha bị hủy, các nhiệm vụ con cũng phải bị hủy.
         if (task.parentId && data.status !== undefined) {
             const parent = await Task.findById(task.parentId).select("status").lean()
             if (parent?.status === TaskStatus.CANCELLED && data.status !== TaskStatus.CANCELLED) {
@@ -94,7 +115,7 @@ export async function PATCH(
                 )
             }
         }
-
+//Giao việc
         if (data.assignees) {
             const ownerId = project.owner.userId.toString()
             const memberIds = project.members.map((m) => m.userId.toString())
@@ -123,6 +144,7 @@ export async function PATCH(
                 )
             }
         }
+        //Cập nhật
         const updateData: Record<string, unknown> = {}
 
         if (data.title !== undefined) updateData.title = data.title

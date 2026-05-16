@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { parsePhoneNumberFromString } from "libphonenumber-js/max"
 
-// ✅ Tạo Schema cho Address (thay thế cho position/skills)
 const addressSchema = z.preprocess((value) => {
     if (typeof value !== "string") return undefined
     const trimmed = value.trim()
@@ -49,9 +48,6 @@ export const registerSchema = z.object({
                 (type === "MOBILE" || type === "FIXED_LINE_OR_MOBILE")
             )
         }, "Số điện thoại không hợp lệ"),
-
-    // Lưu ý: Nếu trang đăng ký cũng bỏ position/skills thì hãy xóa 2 dòng dưới
-    // và thay bằng address: addressSchema nếu cần.
     address: addressSchema,
 
     password: z.string().min(6, "Mật khẩu phải ít nhất 6 ký tự"),

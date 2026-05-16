@@ -8,6 +8,7 @@ import {
     getProjectsService,
 } from "@/services/project.service"
 import type {Project} from "@/types/project"
+import {toast} from "sonner";
 
 export function useProjectList() {
     const pathname = usePathname()
@@ -71,6 +72,7 @@ export function useProjectList() {
         }
     }, [])
     const handleCreated = async () => {
+        toast.success("Dự án đã được tạo")
         setOpen(false)
         setLoading(true)
         await loadProjects()
@@ -78,20 +80,29 @@ export function useProjectList() {
 
     const handleDelete = async (projectId: string | undefined) => {
         if (!projectId) {
-            window.alert("Project ID không hợp lệ")
+            toast.error("Project ID không hợp lệ")
             return
         }
 
-        const ok = window.confirm("Xác định xóa dự án này? Thao tác không thể hoàn tác")
+        const ok = window.confirm(
+            "Xác định xóa dự án này? Thao tác không thể hoàn tác"
+        )
+
         if (!ok) return
 
         setDeletingId(projectId)
 
         try {
             await deleteProjectService(projectId)
-            setProjects((prev) => prev.filter((p) => p.projectId !== projectId))
+
+            setProjects((prev) =>
+                prev.filter((p) => p.projectId !== projectId)
+            )
+
+            toast.success("Xóa dự án thành công")
+
         } catch {
-            window.alert("Xóa thất bại!")
+            toast.error("Xóa dự án thất bại")
         } finally {
             setDeletingId(null)
         }
@@ -135,6 +146,7 @@ export function useProjectList() {
     }
 
     const handleProjectUpdated = async () => {
+        toast.success("Cập nhật dự án thành công")
         setSettingsDialogProjectId(null)
         setSettingsDialogProjectTitle(null)
         setLoading(true)
