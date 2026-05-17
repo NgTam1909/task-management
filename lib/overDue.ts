@@ -66,6 +66,7 @@ export function getTaskOverDue(
 
     const isOverdue =
         !!dueDate &&
+        !isFinished &&
         dueDate.getTime() < today.getTime()
 
     let isDelayed = false

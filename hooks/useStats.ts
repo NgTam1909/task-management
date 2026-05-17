@@ -24,8 +24,6 @@ export function useStats(tasks: Task[]) {
     const monthlyData = useMemo<MonthlyItem[]>(() => {
         const now = new Date()
         const map = new Map<string, MonthlyItem>()
-        let carryOver = 0
-
         // Lấy tất cả các tháng có dữ liệu và sắp xếp
         const allMonthsSet = new Set<string>()
 
@@ -49,40 +47,44 @@ export function useStats(tasks: Task[]) {
         })
 
         sortedMonths.forEach((month) => {
-            const newTasks = tasks.filter(t =>
-                t.createdAt && monthKeyFromDate(new Date(t.createdAt)) === month
-            ).length
-
-            const completedTasks = tasks.filter(t =>
-                t.status === "done" && t.updatedAt &&
-                monthKeyFromDate(new Date(t.updatedAt)) === month
-            ).length
-
-            const cancelledTasks = tasks.filter(t =>
-                t.status === "cancelled" && t.updatedAt &&
-                monthKeyFromDate(new Date(t.updatedAt)) === month
-            ).length
-
-            const overdueTasks = tasks.filter((t) => {
-                if (!t.dueDate) return false
+            const monthTasks = tasks.filter((t) => {
+                if (!t.createdAt) {
+                    return false
+                }
 
                 return (
-                    monthKeyFromDate(new Date(t.dueDate)) === month &&
-                    getTaskOverDue(t, now).isOverdue
+                    monthKeyFromDate(
+                        new Date(t.createdAt)
+                    ) === month
                 )
-            }).length
+            })
+
+            const openTasks = monthTasks.filter((t) =>
+                t.status !== "done" &&
+                t.status !== "cancelled" &&
+                t.status !== "pending_review"
+            ).length
+
+            const completedTasks = monthTasks.filter(
+                (t) => t.status === "done"
+            ).length
+
+            const cancelledTasks = monthTasks.filter(
+                (t) => t.status === "cancelled"
+            ).length
+
+            const overdueTasks = monthTasks.filter((t) =>
+                getTaskOverDue(t, now).isOverdue
+            ).length
+
             map.set(month, {
                 month,
-                created: newTasks,
+                created: monthTasks.length,
+                opening: openTasks, // task đang cần làm hiện tại
                 completed: completedTasks,
+                cancelled: cancelledTasks,
                 overdue: overdueTasks,
-                carryOver: carryOver,
-                cancelled: cancelledTasks
             })
-            carryOver = Math.max(
-                0,
-                carryOver + newTasks - completedTasks - cancelledTasks
-            )
         })
 
         return Array.from(map.values())
@@ -110,9 +112,18 @@ export function useStats(tasks: Task[]) {
 
     const overdueCount = useMemo(() => {
         const now = new Date()
-        return tasks.filter((task) =>
-            getTaskOverDue(task, now).isOverdue
-        ).length
+
+        return tasks.filter((task) => {
+            if (
+                task.status === "done" ||
+                task.status === "cancelled" ||
+                task.status === "pending_review"
+            ) {
+                return false
+            }
+
+            return getTaskOverDue(task, now).isOverdue
+        }).length
     }, [tasks])
     const pendingReviewCount = useMemo(() => {
         return tasks.filter((t) => t.status === "pending_review").length

@@ -175,11 +175,11 @@ export async function PATCH(
             }
             // CHẶN: Chuyển từ Backlog sang To-do nhưng Task đã quá hạn
             if (currentStatus === TaskStatus.BACKLOG && nextStatus === TaskStatus.TODO) {
-                const { isOverdue } = getTaskOverDue(task); // Sử dụng hàm helper của bạn
+                const { isOverdue } = getTaskOverDue(task); // Sử dụng hàm helper
                 if (isOverdue) {
                     return NextResponse.json(
-                        { message: "Công việc đã quá hạn ở Backlog."+
-                                "Hãy cập nhật ngày hết hạn mới trước giao việc."+
+                        { message: "Công việc đã quá hạn ở Backlog. "+
+                                "Hãy cập nhật ngày hết hạn mới trước giao việc. "+
                                  "Hoặc chuyển về Cancelled để hủy bỏ"
                         },
                         { status: 400 }

@@ -29,23 +29,20 @@ export default function TaskMonthlyChart({
             return new Date(ya, ma - 1).getTime() - new Date(yb, mb - 1).getTime()
         })
         .map((item) => {
-            const carryOver = item.carryOver ?? 0
-            const created = item.created ?? 0
+            const totalOpen  = item.opening ?? 0
             const completed = item.completed ?? 0
             const overdue = item.overdue ?? 0
-            const cancelled = item.overdue ?? 0
-            const pending = Math.max(
-                0,
-                carryOver + created - completed - cancelled
-            )
+            const created = item.created ?? 0
+            const cancelled = item.cancelled ?? 0
+            const pending = Math.max(0, totalOpen - overdue)
             return {
                 ...item,
-                carryOver,
+                opening: totalOpen ,
                 created,
                 completed,
+                cancelled,
                 overdue,
                 pending,
-                overdueSafe: Math.min(overdue, pending),
             }
         })
 
@@ -104,7 +101,10 @@ export default function TaskMonthlyChart({
                                         entry.color === "#f3f4f6"
                                             ? "#6d87ed"
                                             : entry.color
-
+                                    const displayValue =
+                                        entry.dataKey === "pending"
+                                            ? entry.payload.opening
+                                            : entry.value
                                     return (
                                         <div key={index}>
               <span
@@ -113,7 +113,7 @@ export default function TaskMonthlyChart({
                       fontWeight: 500,
                   }}
               >
-                {entry.name}: {entry.value}
+                {entry.name}: {displayValue}
               </span>
                                         </div>
                                     )
@@ -129,18 +129,13 @@ export default function TaskMonthlyChart({
                     }}
                     iconType="circle"
                     iconSize={10}
-                    formatter={(value) => (
-                        <span style={{ color: '#5192f1', fontWeight: 500 }}>
-                {value}
-            </span>
-                    )}
                 />
 
                 <Bar
                     dataKey="pending"
                     stackId="a"
                     fill="#f3f4f6"
-                    name="Task cần làm"
+                    name="Task đang mở"
                     stroke="#9ca3af"
                     strokeWidth={1}
                     barSize={36}
@@ -151,22 +146,22 @@ export default function TaskMonthlyChart({
                         if (month && onSelectMonth) onSelectMonth(month)
                     }}
                 />
-
+                <Bar
+                    dataKey="overdue"
+                    stackId="a"
+                    fill="#ef4444"
+                    name="Quá hạn"
+                    radius={[4, 4, 0, 0]}
+                />
                 <Bar
                     dataKey="completed"
                     stackId="a"
                     fill="#10b981"
-                    name="Task hoàn thành"
+                    name="Task đã hoàn thành"
                     radius={[4, 4, 0, 0]}
                 />
 
-                <Bar
-                    dataKey="overdueSafe"
-                    stackId="a"
-                    fill="#ef4444"
-                    name="Task quá hạn"
-                    radius={[4, 4, 0, 0]}
-                />
+
             </BarChart>
         </ResponsiveContainer>
     )

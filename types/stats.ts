@@ -3,7 +3,7 @@ export type MonthlyItem = {
     created: number
     completed: number
     overdue: number
-    carryOver: number
+    opening: number
     cancelled: number
 }
 export type StatsListFilter =
@@ -18,5 +18,6 @@ export type Item = {
     created: number
     completed: number
     overdue: number
-    carryOver?: number
+    cancelled: number
+    opening?: number
 }

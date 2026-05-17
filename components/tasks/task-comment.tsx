@@ -18,9 +18,17 @@ type TaskDetailProps = {
 const formatLogTime = (value: string) => {
     const date = new Date(value)
 
-    if (Number.isNaN(date.getTime())) return value
+    if (Number.isNaN(date.getTime())) {
+        return value
+    }
 
-    return date.toLocaleDateString("vi-VN")
+    const datePart = date.toLocaleDateString("vi-VN")
+    const timePart = date.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+    })
+
+    return `${datePart} - ${timePart}`
 }
 
 export function TaskComment({ task }: TaskDetailProps) {
