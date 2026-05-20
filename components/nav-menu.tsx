@@ -60,11 +60,11 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
                             onClick={onToggleSidebarAction}
                             aria-label="Mở sidebar"
                         >
-                            <Image src="/logoo.png" alt="Logo" width={40} height={40} />
+                            <Image src="/task.png" alt="Logo" width={40} height={40} />
                         </Button>
                     ) : (
-                        <Button variant="ghost" size="icon" aria-label="Logo">
-                            <Image src="/logoo.png" alt="Logo" width={100} height={100} />
+                        <Button variant="ghost" aria-label="Logo">
+                            <Image src="/task.png" alt="Logo" width={100} height={100} />
                         </Button>
                     )}
 
@@ -86,9 +86,30 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                        <HelpCircle size={20} />
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <HelpCircle size={20} />
+                            </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                            align="end"
+                            className="w-[500px] p-3"
+                        >
+                            <p className="mb-2 text-sm font-medium">
+                                Hướng dẫn sử dụng trạng thái công việc:
+                            </p>
+
+                            <Image
+                                src="/workflow.png"
+                                alt="Workflow"
+                                width={450}
+                                height={300}
+                                className="rounded-md border"
+                            />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
                     <Separator orientation="vertical" className="h-6" />
 

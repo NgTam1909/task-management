@@ -136,7 +136,7 @@ export async function POST(
 
         const inviter = await User.findById(userId).select("firstName lastName email");
         const inviterName = inviter
-            ? `${inviter.firstName ?? ""} ${inviter.lastName ?? ""}`.trim()
+            ? `${inviter.lastName ?? ""} ${inviter.firstName ?? ""}`.trim()
             : undefined;
 
         const inviteLink = `${origin}/invite/${rawToken}`;

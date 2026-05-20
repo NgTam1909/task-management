@@ -61,6 +61,7 @@ export function useRegisterForm() {
                 email: form.email,
                 phone: form.phone,
                 password: form.password,
+                confirmPassword: form.confirmPassword,
             })
 
             setSuccess("Đăng ký thành công!")

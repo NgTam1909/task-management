@@ -1,7 +1,5 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { jwtVerify } from "jose"
-
 import { connectDB } from "@/lib/db"
 import User from "@/models/user.model"
 import Project from "@/models/project.model"
@@ -16,12 +14,6 @@ function escapeRegex(value: string) {
 function toShortTaskCode(id: string) {
     const suffix = id.slice(-6).toUpperCase()
     return `${suffix}`
-}
-
-function includesQuery(value: unknown, q: string) {
-    if (!q) return false
-    if (typeof value !== "string") return false
-    return value.toLocaleLowerCase("vi-VN").includes(q.toLocaleLowerCase("vi-VN"))
 }
 
 export async function GET(req: NextRequest) {
@@ -46,19 +38,25 @@ export async function GET(req: NextRequest) {
                 tasks: [] as SearchTask[],
             })
         }
-
+        await connectDB()
         const safe = escapeRegex(q)
         const userObjectId = new mongoose.Types.ObjectId(userId)
-        const qLower = q.toLocaleLowerCase("vi-VN")
-
-        await connectDB()
-
         // Only public projects are searchable (explicit requirement).
         const projects = (await Project.find({
-            isPublic: true,
-            $or: [
-                { title: { $regex: safe, $options: "i" } },
-                { projectId: { $regex: safe, $options: "i" } },
+            $and: [
+                {
+                    $or: [
+                        { title: { $regex: safe, $options: "i" } },
+                        { projectId: { $regex: safe, $options: "i" } },
+                    ],
+                },
+                {
+                    $or: [
+                        { isPublic: true },
+                        { "owner.userId": userObjectId },
+                        { "members.userId": userObjectId },
+                    ],
+                },
             ],
         })
             .select("_id title projectId isPublic")
@@ -72,24 +70,14 @@ export async function GET(req: NextRequest) {
                     { firstName: { $regex: safe, $options: "i" } },
                     { lastName: { $regex: safe, $options: "i" } },
                     { email: { $regex: safe, $options: "i" } },
-                    { phone: { $regex: safe, $options: "i" } },
                 ],
             })
-                .select("_id firstName lastName email")
+                .select("_id lastName firstName email")
                 .limit(limit)
                 .lean(),
 
             // Tasks are searchable only if they belong to public projects.
             Task.aggregate([
-                {
-                    $match: {
-                        $or: [
-                            { title: { $regex: safe, $options: "i" } },
-                            { code: { $regex: safe, $options: "i" } },
-                            { status: { $regex: safe, $options: "i" } },
-                        ]
-                    },
-                },
                 {
                     $lookup: {
                         from: "projects",
@@ -98,17 +86,31 @@ export async function GET(req: NextRequest) {
                         as: "project",
                     },
                 },
-                { $unwind: "$project" },
-                // Private projects are hidden from non-members, but still searchable for members/owner.
+
+                {
+                    $unwind: "$project",
+                },
+
+                // permission
                 {
                     $match: {
-                        $or: [
-                            { "project.isPublic": true },
-                            { "project.owner.userId": userObjectId },
-                            { "project.members.userId": userObjectId },
+                        $and: [
+                            {
+                                $or: [
+                                    { title: { $regex: safe, $options: "i" } },
+                                ],
+                            },
+                            {
+                                $or: [
+                                    { "project.isPublic": true },
+                                    { "project.owner.userId": userObjectId },
+                                    { "project.members.userId": userObjectId },
+                                ],
+                            },
                         ],
                     },
                 },
+
                 {
                     $project: {
                         _id: 1,
@@ -118,8 +120,16 @@ export async function GET(req: NextRequest) {
                         createdAt: 1,
                     },
                 },
-                { $sort: { createdAt: -1 } },
-                { $limit: limit },
+
+                {
+                    $sort: {
+                        createdAt: -1,
+                    },
+                },
+
+                {
+                    $limit: limit,
+                },
             ]),
         ])
 
@@ -128,7 +138,7 @@ export async function GET(req: NextRequest) {
             const firstName = typeof u.firstName === "string" ? u.firstName : ""
             const lastName = typeof u.lastName === "string" ? u.lastName : ""
             const email = typeof u.email === "string" ? u.email : ""
-            const name = `${firstName} ${lastName}`.trim() || email
+            const name = `${lastName} ${firstName}`.trim() || email
             return { id, name, email }
         })
 

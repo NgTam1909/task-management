@@ -9,6 +9,7 @@ export interface RegisterPayload {
     email: string
     phone: string
     password: string
+    confirmPassword: string
 }
 export interface ApiError {
     message: string

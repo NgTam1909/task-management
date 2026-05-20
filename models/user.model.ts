@@ -4,9 +4,10 @@ import bcrypt from "bcryptjs";
 export interface IUser extends Document {
     firstName: string;
     lastName: string;
-    phone: string;
+    phone?: string;
     email: string;
-    password: string;
+    password?: string;
+    googleId?: string;
     address?: string;
     isGod: boolean;
     resetPasswordToken?: string;
@@ -33,7 +34,10 @@ const UserSchema = new Schema<IUser>(
 
         phone: {
             type: String,
-            required: true,
+            required(this: IUser) {
+                return !this.googleId;
+            },
+            default: "",
         },
 
         email: {
@@ -46,9 +50,17 @@ const UserSchema = new Schema<IUser>(
 
         password: {
             type: String,
-            required: true,
+            required(this: IUser) {
+                return !this.googleId;
+            },
             minlength: 6,
             select: false, // không trả về mặc định
+        },
+
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true,
         },
 
         address: {
@@ -76,7 +88,7 @@ const UserSchema = new Schema<IUser>(
 );
 
 UserSchema.pre("save", async function () {
-    if (!this.isModified("password")) return;
+    if (!this.isModified("password") || !this.password) return;
 
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -91,6 +103,7 @@ UserSchema.methods.checkGod = function (): boolean {
 UserSchema.methods.comparePassword = async function (
     candidate: string
 ): Promise<boolean> {
+    if (!this.password) return false;
     return bcrypt.compare(candidate, this.password);
 };
 
