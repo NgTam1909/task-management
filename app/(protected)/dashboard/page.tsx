@@ -1,100 +1,72 @@
-﻿import { cookies } from "next/headers"
-import { jwtVerify } from "jose"
+﻿"use client"
 
-import { connectDB } from "@/lib/db"
-import User from "@/models/user.model"
-import {MyTasks} from "@/components/tasks/my-task";
+import { useEffect, useMemo, useState } from "react"
+import { AuthService } from "@/services/auth.service"
+import { MyTasks } from "@/components/tasks/my-task"
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
-
-async function getCurrentUsername() {
-    const token = (await cookies()).get("accessToken")?.value
-
-    if (!token) return null
-
-    try {
-        const { payload } = await jwtVerify(token, SECRET)
-        const userId =
-            (payload as { id?: string; userId?: string }).id ??
-            (payload as { id?: string; userId?: string }).userId
-
-        if (!userId) return null
-
-        await connectDB()
-
-        const user = await User.findById(userId).select(
-            "firstName lastName email"
-        )
-
-        if (!user) return null
-
-        const fullName = [user.lastName, user.firstName]
-            .filter(Boolean)
-            .join(" ")
-            .trim()
-
-        return fullName || user.email
-    } catch {
-        return null
-    }
+function getGreeting(hour: number) {
+    if (hour < 4) return "Hãy chú ý sức khỏe"
+    if (hour < 12) return "Chào buổi sáng"
+    if (hour < 18) return "Chào buổi chiều"
+    if (hour < 23) return "Chào buổi tối"
+    return "Hãy chú ý sức khỏe"
 }
 
-export default async function DashboardPage() {
+function getVietnamTime() {
     const now = new Date()
-    const vnTime = new Date(
+    return new Date(
         now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
     )
-        const hour= vnTime.getHours()
-    const username = (await getCurrentUsername()) ?? "bạn"
-    const greeting =
-        hour < 4
-            ? 'Hãy chú ý sức khỏe'
-            : hour < 12
-                ? 'Chào buổi sáng'
-                : hour < 18
-                    ? 'Chào buổi chiều'
-                    : hour < 23
-                        ? 'Chào buổi tối'
-                        : 'Hãy chú ý sức khỏe'
+}
 
-    const today = vnTime.toLocaleDateString('vi-VN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
+export default function DashboardPage() {
+    const [username, setUsername] = useState("bạn")
+    const vnTime = useMemo(() => getVietnamTime(), [])
+    const hour = vnTime.getHours()
+    const greeting = getGreeting(hour)
+    const today = vnTime.toLocaleDateString("vi-VN", {
+        weekday: "long",
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
     })
-    const time = vnTime.toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit'
+    const time = vnTime.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
     })
+
+    useEffect(() => {
+        let mounted = true
+
+        AuthService.me().then((data) => {
+            if (!mounted) return
+            if (data?.firstName && data?.lastName) {
+                setUsername(`${data.lastName} ${data.firstName}`.trim())
+            }
+        })
+
+        return () => {
+            mounted = false
+        }
+    }, [])
 
     return (
         <div className="w-full px-3 sm:px-6 lg:px-10 space-y-10 overflow-x-hidden">
-
-            {/* Header */}
-            <div className="space-y-1 text-center ">
+            <div className="space-y-1 text-center">
                 <h1 className="text-2xl sm:text-3xl font-bold">
                     {greeting}, {username}
                 </h1>
-
                 <p className="text-sm text-muted-foreground">
                     {time}, {today}
                 </p>
             </div>
 
-            {/* Task Section */}
             <div>
-                <h2 className="text-lg sm:text-xl font-semibold ">
+                <h2 className="text-lg sm:text-xl font-semibold">
                     Danh sách công việc
                 </h2>
-                    <MyTasks />
-
+                <MyTasks />
             </div>
-
         </div>
-
     )
 }
-
-
-

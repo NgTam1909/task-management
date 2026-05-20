@@ -34,6 +34,9 @@ export default function LoginForm({
     const googleLoginUrl = `/api/auth/google?redirect=${encodeURIComponent(
         redirect
     )}`
+    const googleError = searchParams.get("error") === "google_auth_failed"
+        ? "Đăng nhập bằng Google không thành công. Vui lòng thử lại."
+        : null
     const [showPassword, setShowPassword] = useState(false)
 
     // Xử lý submit form
@@ -44,6 +47,7 @@ export default function LoginForm({
     const isFormValid =
         identifier.trim() !== "" &&
         password.trim() !== ""
+    const displayError = error || googleError
     return (
         <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
             <Card className="w-full max-w-sm sm:max-w-md rounded-2xl shadow-lg border">
@@ -99,9 +103,9 @@ export default function LoginForm({
 
 
                         {/* Error */}
-                        {error && (
+                        {displayError && (
                             <p className="text-sm text-red-500 text-center">
-                                {error}
+                                {displayError}
                             </p>
                         )}
 
