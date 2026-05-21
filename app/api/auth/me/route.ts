@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import User from "@/models/user.model"
 import { updateProfileSchema } from "@/lib/validations/auth.validation"
 import { getUserIdFromRequest } from "@/lib/jwt";
@@ -11,8 +11,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
 
-        await connectDB()
-
+        await dbConnect()
         // Thay đổi: Lấy trường "address", loại bỏ "position" và "skills"
         const user = await User.findById(userId).select(
             "firstName lastName phone email isGod address"
@@ -71,7 +70,7 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ message: "Không có dữ liệu thay đổi" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const nextUser = await User.findByIdAndUpdate(
             userId,

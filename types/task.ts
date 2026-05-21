@@ -41,8 +41,8 @@ export type LeanUser = {
     firstName?: string
     lastName?: string
     email?: string
-    position?: string | null
-    skills?: string[]
+    address?: string
+
 }
 export type TaskSubtaskItem = {
     id: string

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import dbConnect from "@/lib/db";
 import Project, { IProjectMember } from "@/models/project.model";
 import {ProjectRole} from "@/types/project";
 import ProjectInvite from "@/models/projectInvite.model";
@@ -51,7 +51,7 @@ export async function POST(
 
         const email = parsed.data.email.trim().toLowerCase();
 
-        await connectDB();
+        await dbConnect();
 
         let project = await Project.findOne({ projectId, isActive: true });
         if (!project && mongoose.isValidObjectId(projectId)) {

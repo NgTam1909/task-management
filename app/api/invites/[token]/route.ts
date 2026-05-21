@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import dbConnect from "@/lib/db";
 import Project, { IProjectMember } from "@/models/project.model";
 import {ProjectRole} from "@/types/project";
 import ProjectInvite from "@/models/projectInvite.model";
@@ -33,7 +33,7 @@ export async function GET(
             return NextResponse.json({ message: "Missing token" }, { status: 400 });
         }
 
-        await connectDB();
+        await dbConnect();
 
         const invite = await findInvite(token);
         if (!invite) {
@@ -79,7 +79,7 @@ export async function POST(
             return NextResponse.json({ message: "Missing token" }, { status: 400 });
         }
 
-        await connectDB();
+        await dbConnect();
 
         const invite = await findInvite(token);
         if (!invite) {

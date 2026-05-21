@@ -1,6 +1,6 @@
 'use client'
 
-import { useSyncExternalStore, useState } from "react"
+import { useEffect, useState } from "react"
 import {  Bell, HelpCircle, Search, User } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -29,11 +29,11 @@ type NavMenuProps = {
 export default function NavMenu({ onToggleSidebarAction, className }: NavMenuProps) {
     const router = useRouter()
     // hiển thị một phương án dự phòng ổn định trên máy chủ.
-    const isClient = useSyncExternalStore(
-        () => () => { },
-        () => true,
-        () => false
-    )
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const { notifications, logsLoading, logsError, loadNotifications } = useNotification()
     const [searchQuery, setSearchQuery] = useState("")
@@ -63,7 +63,7 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
                             <Image src="/task.png" alt="Logo" width={40} height={40} />
                         </Button>
                     ) : (
-                        <Button variant="ghost" aria-label="Logo">
+                        <Button type="button" variant="ghost" aria-label="Logo">
                             <Image src="/task.png" alt="Logo" width={100} height={100} />
                         </Button>
                     )}
@@ -113,7 +113,7 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
 
                     <Separator orientation="vertical" className="h-6" />
 
-                    {isClient ? (
+                    {mounted  ? (
                         <DropdownMenu onOpenChange={handleNotificationOpenChange}>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" aria-label="Thông báo">
@@ -138,7 +138,7 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
 
                     <Separator orientation="vertical" className="h-6" />
 
-                    {isClient ? (
+                    {mounted  ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" aria-label="User menu">

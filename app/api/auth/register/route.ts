@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import User from "@/models/user.model"
 import { registerSchema } from "@/lib/validations/auth.validation"
 
 export async function POST(req: Request) {
     try {
-        await connectDB()
+        await dbConnect()
         const body = await req.json()
 
         // Validate bằng Zod

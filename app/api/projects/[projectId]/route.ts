@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project, { IProjectMember } from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
 import { updateProjectSchema } from "@/lib/validations/project.validation"
@@ -66,7 +66,7 @@ export async function GET(
             return NextResponse.json({ message: "Không thấy projectId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const project = await findProjectByParam(projectId)
         if (!project) {
@@ -119,7 +119,7 @@ export async function PATCH(
             )
         }
 
-        await connectDB()
+        await dbConnect()
 
         const project = await findProjectByParam(projectId)
         if (!project) {
@@ -195,7 +195,7 @@ export async function DELETE(
             return NextResponse.json({ message: "Không thấy projectId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { jwtVerify } from "jose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project from "@/models/project.model"
 import Task from "@/models/task.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
@@ -20,7 +19,7 @@ export async function GET(
             return NextResponse.json({ message: "Thiếu taskId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const parent = await Task.findById(taskId).select("_id projectId").lean()
         if (!parent) {

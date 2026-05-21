@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project from "@/models/project.model"
 import Task from "@/models/task.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
@@ -20,7 +20,7 @@ export async function GET(
             return NextResponse.json({ message: "Không thấy projectId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const project = await Project.findOne({ projectId, isActive: true })
         if (!project) {

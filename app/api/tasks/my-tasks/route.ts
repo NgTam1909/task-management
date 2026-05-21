@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project from "@/models/project.model"
 import TaskModel from "@/models/task.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
             ]
         }
 
-        await connectDB()
+        await dbConnect()
 
         const docs = await TaskModel.find(query)
             .select("title status priority dueDate projectId assignees creatorId createdAt updatedAt")

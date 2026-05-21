@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
 import { createProjectSchema } from "@/lib/validations/project.validation"
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const projects = await Project.find({
             isActive: true,
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
         const { title, description, visibility } = parsed.data
 
-        await connectDB()
+        await dbConnect()
 
         const projectId = await generateProjectId(title)
 

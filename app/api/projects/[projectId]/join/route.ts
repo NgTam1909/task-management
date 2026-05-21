@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import dbConnect from "@/lib/db";
 import Project, { IProjectMember } from "@/models/project.model";
 import {ProjectRole} from "@/types/project";
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model";
@@ -24,7 +24,7 @@ export async function GET(
             return NextResponse.json({ message: "Missing projectId" }, { status: 400 });
         }
 
-        await connectDB();
+        await dbConnect();
 
         const project = await findProject(projectId);
         if (!project) {
@@ -70,7 +70,7 @@ export async function POST(
             return NextResponse.json({ message: "Missing projectId" }, { status: 400 });
         }
 
-        await connectDB();
+        await dbConnect();
 
         const project = await findProject(projectId);
         if (!project) {

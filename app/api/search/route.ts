@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import User from "@/models/user.model"
 import Project from "@/models/project.model"
 import Task from "@/models/task.model"
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
                 tasks: [] as SearchTask[],
             })
         }
-        await connectDB()
+        await dbConnect()
         const safe = escapeRegex(q)
         const userObjectId = new mongoose.Types.ObjectId(userId)
         // Only public projects are searchable (explicit requirement).

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
 import { jwtVerify } from "jose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Task from "@/models/task.model"
 import Project from "@/models/project.model"
 import {PopulatedUser} from "@/types/user"
@@ -36,7 +36,7 @@ async function getTaskWithAccess(req: NextRequest, taskId: string) {
         }
     }
 
-    await connectDB()
+    await dbConnect()
 
     const task = await Task.findById(taskId)
     if (!task) {

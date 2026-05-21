@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Task from "@/models/task.model"
 import Project, { IProjectMember} from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
@@ -59,7 +59,7 @@ export async function PATCH(
             )
         }
 
-        await connectDB()
+        await dbConnect()
 
         const task = await Task.findById(taskId)
         if (!task) {

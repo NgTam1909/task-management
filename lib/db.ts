@@ -1,38 +1,51 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
+const MONGODB_URI = process.env.MONGODB_URI;
+
 if (!MONGODB_URI) {
-    throw new Error("MONGODB_URI chưa được cấu hình")
+    throw new Error('Vui lòng định nghĩa biến MONGODB_URI trong file .env.local');
 }
-type MongooseCache = {
+
+// Định nghĩa kiểu cho biến global cache
+interface GlobalMongoose {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
-};
+}
 
 declare global {
-    var mongoose: MongooseCache | undefined;
+    var mongoose: GlobalMongoose | undefined;
 }
 
-const cached: MongooseCache = global.mongoose || {
-    conn: null,
-    promise: null,
-};
+let cached = global.mongoose;
 
-if (!global.mongoose) {
-    global.mongoose = cached;
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
 }
 
-export const connectDB = async () => {
-    try {
-        if (mongoose.connection.readyState === 1) {
-             return
-        }
-
-        await mongoose.connect(MONGODB_URI)
-        console.log(" Kết nối MongoDB thành công")
-
-    } catch (error) {
-        console.error("Lỗi kết nối MongoDB:", error)
-        throw error
+async function dbConnect() {
+    if (cached!.conn) {
+        return cached!.conn;
     }
+
+    if (!cached!.promise) {
+        const opts = {
+            bufferCommands: false,
+        };
+
+        cached!.promise = mongoose.connect(MONGODB_URI!, opts).then((mongooseInstance) => {
+            console.log('Kết nối MongoDB mới thành công');
+            return mongooseInstance;
+        });
+    }
+
+    try {
+        cached!.conn = await cached!.promise;
+    } catch (e) {
+        cached!.promise = null;
+        throw e;
+    }
+
+    return cached!.conn;
 }
+
+export default dbConnect;

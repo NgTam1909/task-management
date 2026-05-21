@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import TaskModel from "@/models/task.model"
 import mongoose from "mongoose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project from "@/models/project.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
 
@@ -23,7 +23,7 @@ export async function GET(
             )
         }
 
-        await connectDB()
+        await dbConnect()
 
         let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {

@@ -32,7 +32,11 @@ export async function GET(req: Request) {
     prompt: "select_account",
   })
 
-  const response = NextResponse.redirect(`${GOOGLE_AUTH_URL}?${params.toString()}`)
+  const response = NextResponse.redirect(
+      `${GOOGLE_AUTH_URL}?${params.toString()}`
+  )
+
+  response.cookies.delete("accessToken")
   response.cookies.set("google_oauth_state", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

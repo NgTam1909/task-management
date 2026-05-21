@@ -56,8 +56,6 @@ const ProjectInviteSchema = new Schema<IProjectInvite>(
 );
 
 ProjectInviteSchema.index({ projectId: 1, email: 1, acceptedAt: 1 });
-ProjectInviteSchema.index({ tokenHash: 1 }, { unique: true });
-ProjectInviteSchema.index({ expiresAt: 1 });
 
 const ProjectInvite: Model<IProjectInvite> =
     mongoose.models.ProjectInvite ||

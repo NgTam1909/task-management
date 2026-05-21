@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Project, { IProjectMember } from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
 import User from "@/models/user.model"
@@ -23,7 +23,7 @@ export async function GET(
             return NextResponse.json({ message: "Không thấy projectId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
@@ -115,7 +115,7 @@ export async function PATCH(
             )
         }
 
-        await connectDB()
+        await dbConnect()
 
         let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {
@@ -205,7 +205,7 @@ export async function DELETE(
             return NextResponse.json({ message: "Thiếu memberId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         let project = await Project.findOne({ projectId, isActive: true })
         if (!project && mongoose.isValidObjectId(projectId)) {

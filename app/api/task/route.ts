@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import Task from "@/models/task.model"
 import Project, { IProjectMember } from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const body = await req.json()
         const parsed = createTaskSchema.safeParse(body)

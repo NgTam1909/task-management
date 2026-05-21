@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import ActivityLog from "@/models/activityLog.model"
 import Task from "@/models/task.model"
 import Project from "@/models/project.model"
@@ -22,7 +22,7 @@ export async function GET(
             return NextResponse.json({ message: "Thiếu taskId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         if (!mongoose.isValidObjectId(taskId)) {
             return NextResponse.json({ message: "Task không hợp lệ" }, { status: 400 })

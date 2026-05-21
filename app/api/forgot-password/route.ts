@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import User from "@/models/user.model"
 import { sendResetEmail } from "@/lib/mail"
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        await connectDB()
+        await dbConnect()
 
         const user = await User.findOne({ email }).select("+resetPasswordToken +resetPasswordExpires")
         if (!user) {

@@ -1,10 +1,10 @@
 import {signToken} from "@/lib/jwt";
 import {NextResponse} from "next/server";
-import {connectDB} from "@/lib/db";
+import dbConnect from "@/lib/db";
 import User from "@/models/user.model";
 
 export async function POST(req: Request) {
-    await connectDB()
+    await dbConnect()
     const { email, password } = await req.json()
 
     const user = await User.findOne({ email }).select("+password")
@@ -23,6 +23,8 @@ export async function POST(req: Request) {
         id: user._id.toString(),
         email: user.email,
         isGod: user.isGod,
+        firstName: user.firstName,
+        lastName: user.lastName
     })
 
     const response = NextResponse.json({ success: true })

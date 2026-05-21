@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import ActivityLog from "@/models/activityLog.model"
 import Project from "@/models/project.model"
 import {PopulatedUser} from "@/types/user"
@@ -29,7 +29,7 @@ export async function GET(
             return NextResponse.json({ message: "Thiếu projectId" }, { status: 400 })
         }
 
-        await connectDB()
+        await dbConnect()
 
         const project = await findProjectByParam(projectId)
         if (!project) {

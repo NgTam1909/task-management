@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
-import { connectDB } from "@/lib/db"
+import dbConnect from "@/lib/db"
 import User from "@/models/user.model"
 
 export async function POST(req: NextRequest) {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        await connectDB()
+        await dbConnect()
 
         const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
 
