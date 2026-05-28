@@ -86,30 +86,32 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <HelpCircle size={20} />
-                            </Button>
-                        </DropdownMenuTrigger>
+                    {mounted ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <HelpCircle size={20} />
+                                </Button>
+                            </DropdownMenuTrigger>
 
-                        <DropdownMenuContent
-                            align="end"
-                            className="w-[500px] p-3"
-                        >
-                            <p className="mb-2 text-sm font-medium">
-                                Hướng dẫn sử dụng trạng thái công việc:
-                            </p>
-
-                            <Image
-                                src="/workflow.png"
-                                alt="Workflow"
-                                width={450}
-                                height={300}
-                                className="rounded-md border"
-                            />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            <DropdownMenuContent align="end" className="w-[500px] p-3">
+                                <p className="mb-2 text-sm font-medium">
+                                    Hướng dẫn sử dụng trạng thái công việc:
+                                </p>
+                                <Image
+                                    src="/workflow.png"
+                                    alt="Workflow"
+                                    width={450}
+                                    height={300}
+                                    className="rounded-md border"
+                                />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Button variant="ghost" size="icon">
+                            <HelpCircle size={20} />
+                        </Button>
+                    )}
 
                     <Separator orientation="vertical" className="h-6" />
 
