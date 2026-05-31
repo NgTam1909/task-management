@@ -9,10 +9,6 @@ export async function createTask(data: CreateTaskInput) {
     return POST_METHOD("/api/task", data)
 }
 
-export async function getProjectTasks(projectId: string) {
-    return GET_METHOD(`/api/projects/${projectId}/tasks`) as Promise<ApiResponse>
-}
-
 export async function updateTask(taskId: string, data: UpdateTaskInput) {
     return PATCH_METHOD(`/api/task/${taskId}`, data)
 }
@@ -29,13 +25,20 @@ export async function getTaskSubtasks(taskId: string) {
     return GET_METHOD(`/api/task/${taskId}/subtasks`) as Promise<{ subtasks?: ApiTask[] }>
 }
 
-export async function createTaskComment(taskId: string, content: string) {
-    return POST_METHOD(`/api/task/${taskId}/comments`, { content })
+export async function createTaskComment(
+    taskId: string,
+    content: string,
+    mentions: string[] = []
+) {
+    return POST_METHOD(
+        `/api/task/${taskId}/comments`,
+        {
+            content,
+            mentions,
+        }
+    )
 }
 
-export async function getTaskAssignees(projectId: string) {
-    return GET_METHOD(`/api/projects/${projectId}/assignees`) as Promise<AssigneeResponse>
-}
 /**
  * Lấy danh sách task của user hiện tại (công việc của tôi)
  * @param filters - Các bộ lọc tùy chọn

@@ -20,10 +20,14 @@ export enum ActivityAction {
 
     TASK_OVERDUE = "TASK_OVERDUE",
     TASK_DEADLINE_EXTENDED = "TASK_DEADLINE_EXTENDED",
+
+    MENTION = "MENTION",
+
 }
 
 export interface IActivityLog extends Document {
     userId: mongoose.Types.ObjectId;
+    targetUserId?: mongoose.Types.ObjectId
     projectId: mongoose.Types.ObjectId;
     entityType: "Project" | "Task" | "Invite";
     entityId?: mongoose.Types.ObjectId;
@@ -41,6 +45,10 @@ const ActivityLogSchema = new Schema<IActivityLog>(
             type: Schema.Types.ObjectId,
             ref: "User",
             required: true,
+        },
+        targetUserId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
         },
 
         projectId: {

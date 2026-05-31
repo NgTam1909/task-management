@@ -6,6 +6,7 @@ export interface ITaskComment {
     _id?: mongoose.Types.ObjectId;
     userId: mongoose.Types.ObjectId;
     content: string;
+    mentions: mongoose.Types.ObjectId [];
     createdAt: Date;
 }
 
@@ -123,6 +124,12 @@ const TaskSchema = new Schema<ITask>(
                     required: true,
                     trim: true,
                 },
+                mentions: [
+                    {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+                ],
                 createdAt: {
                     type: Date,
                     default: Date.now,

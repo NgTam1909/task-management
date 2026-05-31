@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
-import ActivityLog from "@/models/activityLog.model"
+import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import Project from "@/models/project.model"
-import Task from "@/models/task.model"
 import User from "@/models/user.model"
 import { PopulatedUser } from "@/types/user"
 import {getUserIdFromRequest} from "@/lib/jwt";
-
-function escapeRegex(value: string) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
-
-function buildMentionMatchers(parts: { fullName: string; email: string }) {
-    const email = parts.email.trim().toLowerCase()
-    const localPart = email.split("@")[0]?.trim().toLowerCase()
-    const fullName = parts.fullName.trim().toLowerCase()
-
-    return [email, localPart, fullName]
-        .filter((value): value is string => !!value)
-        .map((value) => new RegExp(`(^|\\s)@${escapeRegex(value)}(?=\\s|$|[,.!?])`, "i"))
-}
 
 function formatUser(userDoc: PopulatedUser | null) {
     if (!userDoc || typeof userDoc !== "object" || !("_id" in userDoc)) return null
@@ -78,27 +63,41 @@ export async function GET(req: NextRequest) {
             projects.map((p) => [p._id.toString(), { id: p.projectId, title: p.title }])
         )
 
-        // 2. TỐI ƯU LOGS: Đẩy luật lọc (isTaskAssignment / isProjectUserStatus) trực tiếp vào query MongoDB
-        // Thay vì dùng .filter() bằng JS, ta tận dụng sức mạnh của DB.
-        const logsQuery = {
+        const logsQuery: any = {
             $or: [
                 {
                     projectId: { $in: projectIds },
                     entityType: "Task",
-                    action: { $in: ["CREATE_TASK", "UPDATE_TASK"] },
+                    action: {
+                        $in: [
+                            ActivityAction.CREATE_TASK,
+                            ActivityAction.UPDATE_TASK,
+                        ],
+                    },
                     $or: [
                         { "newValue.assignees": userId },
-                        { "oldValue.assignees": userId }
-                    ]
+                        { "oldValue.assignees": userId },
+                    ],
                 },
+
                 {
                     entityType: { $in: ["Project", "Invite"] },
-                    action: { $in: ["INVITE_MEMBER", "JOIN_PROJECT", "REMOVE_MEMBER"] },
-                    "metadata.affectedUserIds": userId
+                    action: {
+                        $in: [
+                            ActivityAction.INVITE_MEMBER,
+                            ActivityAction.JOIN_PROJECT,
+                            ActivityAction.REMOVE_MEMBER,
+                        ],
+                    },
+                    "metadata.affectedUserIds": userId,
                 },
-                { "metadata.affectedUserIds": userId }
-            ]
-        } as any; // Ép kiểu ở đây để bỏ qua strict check của Mongoose query
+
+                {
+                    action: ActivityAction.MENTION,
+                    "metadata.affectedUserIds": userId,
+                },
+            ],
+        }
 
         // Thực hiện truy vấn log
         const logs = await ActivityLog.find(logsQuery)
@@ -115,14 +114,21 @@ export async function GET(req: NextRequest) {
             const project = projectMap.get(log.projectId?.toString?.() ?? "");
 
             // Xử lý kiểm tra assignees một cách an toàn với TypeScript
-            if (log.entityType === "Task") {
-                const newValueObj = (log.newValue ?? {}) as Record<string, unknown>;
+            if (
+                log.entityType === "Task" &&
+                log.action !== ActivityAction.MENTION
+            ) {
+                const newValueObj = (log.newValue ?? {}) as Record<string, unknown>
+
                 const nextAssignees = Array.isArray(newValueObj.assignees)
                     ? newValueObj.assignees.map(String)
-                    : [];
+                    : []
 
-                if (!nextAssignees.includes(userId) && log.action === "CREATE_TASK") {
-                    return null;
+                if (
+                    log.action === ActivityAction.CREATE_TASK &&
+                    !nextAssignees.includes(userId)
+                ) {
+                    return null
                 }
             }
 
@@ -143,62 +149,19 @@ export async function GET(req: NextRequest) {
                 },
                 user: formatUser(userDoc),
             };
-        }).filter(Boolean);
+        }).filter(
+            (
+                item
+            ): item is NonNullable<typeof item> =>
+                item !== null
+        );
 
-        // 3. TỐI ƯU MENTIONS: Sử dụng $text index hoặc giới hạn quét comment trong khoảng thời gian gần đây
-        // Tránh quét sạch toàn bộ comment lịch sử của Task
-        const mentionNotifications: any[] = []
-        if (projectIds.length > 0) {
-            const oneWeekAgo = new Date()
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) // Chỉ tìm các comment trong 7 ngày gần đây
-
-            const mentionTasks = await Task.find({
-                projectId: { $in: projectIds },
-                "comments.createdAt": { $gte: oneWeekAgo },
-                "comments.content": { $regex: /@/ } // Thu hẹp phạm vi quét bằng thời gian trước
-            })
-                .select("_id title projectId comments")
-                .populate("comments.userId", "firstName lastName email")
-                .lean()
-
-            const mentionMatchers = buildMentionMatchers({
-                fullName: `${user.lastName ?? ""} ${user.firstName ?? ""}`.trim(),
-                email: user.email ?? "",
-            })
-
-            if (mentionMatchers.length > 0) {
-                mentionTasks.forEach((task) => {
-                    const project = projectMap.get(task.projectId.toString())
-                    const comments = Array.isArray(task.comments) ? task.comments : []
-
-                    comments.forEach((comment) => {
-                        if (comment.createdAt >= oneWeekAgo && mentionMatchers.some((m) => m.test(comment.content ?? ""))) {
-                            mentionNotifications.push({
-                                id: `mention-${task._id.toString()}-${comment._id?.toString() ?? comment.createdAt}`,
-                                type: "mention" as const,
-                                action: "MENTION",
-                                entityType: "Task" as const,
-                                entityId: task._id.toString(),
-                                createdAt: comment.createdAt instanceof Date ? comment.createdAt.toISOString() : new Date(comment.createdAt).toISOString(),
-                                oldValue: null,
-                                newValue: null,
-                                metadata: {
-                                    projectId: project?.id ?? null,
-                                    projectTitle: project?.title ?? null,
-                                    taskTitle: task.title,
-                                    content: comment.content,
-                                },
-                                user: formatUser(comment.userId as PopulatedUser | null),
-                            })
-                        }
-                    })
-                })
-            }
-        }
-
-        // 4. Trộn kết quả và trả về tối đa 30 phần tử
-        const notifications = [...formattedLogs, ...mentionNotifications]
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        const notifications = formattedLogs
+            .sort(
+                (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+            )
             .slice(0, 30)
 
         return NextResponse.json({ notifications })

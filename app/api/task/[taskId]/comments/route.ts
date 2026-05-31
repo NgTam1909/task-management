@@ -5,6 +5,8 @@ import dbConnect from "@/lib/db"
 import Task from "@/models/task.model"
 import Project from "@/models/project.model"
 import {PopulatedUser} from "@/types/user"
+import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
+
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
@@ -77,7 +79,14 @@ export async function GET(
         }
 
         const task = await Task.findById(taskId)
-            .populate("comments.userId", "firstName lastName email")
+            .populate(
+                "comments.userId",
+                "firstName lastName email"
+            )
+            .populate(
+                "comments.mentions",
+                "firstName lastName"
+            )
             .lean()
 
         const comments = Array.isArray(task?.comments)
@@ -96,6 +105,12 @@ export async function GET(
                       return {
                           id: comment._id?.toString?.() ?? `${comment.createdAt}`,
                           content: comment.content,
+                          mentions: Array.isArray(comment.mentions)
+                              ? comment.mentions.map((u: any) => ({
+                                  id: u._id?.toString?.() ?? "",
+                                  name: `${u.lastName ?? ""} ${u.firstName ?? ""}`.trim(),
+                              }))
+                              : [],
                           createdAt:
                               comment.createdAt instanceof Date
                                   ? comment.createdAt.toISOString()
@@ -129,9 +144,31 @@ export async function POST(
             return access.error
         }
 
-        const body = (await req.json()) as { content?: string }
+        const body = (await req.json()) as {
+            content?: string
+            mentions?: string[]
+        }
         const content = body.content?.trim()
+        const mentions = body.mentions ?? []
+        const project = await Project.findById(access.task.projectId)
 
+        if (!project) {
+            return NextResponse.json(
+                { message: "Không tìm thấy dự án" },
+                { status: 404 }
+            )
+        }
+
+        const memberIds = [
+            project.owner.userId.toString(),
+            ...(project.members ?? []).map(
+                (m) => m.userId.toString()
+            ),
+        ]
+
+        const validMentions = mentions.filter((id) =>
+            memberIds.includes(id)
+        )
         if (!content) {
             return NextResponse.json(
                 { message: "Bình luận không được để trống" },
@@ -140,15 +177,41 @@ export async function POST(
         }
 
         access.task.comments = [
-            ...(Array.isArray(access.task.comments) ? access.task.comments : []),
+            ...(Array.isArray(access.task.comments)
+                ? access.task.comments
+                : []),
             {
                 userId: new mongoose.Types.ObjectId(access.userId),
+
                 content,
+
+                mentions: validMentions.map(
+                    (id) => new mongoose.Types.ObjectId(id)
+                ),
+
                 createdAt: new Date(),
             },
         ]
 
         await access.task.save()
+        if (validMentions.length > 0) {
+            await ActivityLog.insertMany(
+                validMentions.map((mentionedUserId) => ({
+                    userId: new mongoose.Types.ObjectId(access.userId),
+                    projectId: access.task.projectId,
+                    entityType: "Task",
+                    entityId: access.task._id,
+                    action: ActivityAction.MENTION,
+                    metadata: {
+                        affectedUserIds: [mentionedUserId],
+                        projectId: project.projectId,
+                        projectTitle: project.title,
+                        taskTitle: access.task.title,
+                        content,
+                    },
+                }))
+            )
+        }
 
         return NextResponse.json({ success: true })
     } catch {

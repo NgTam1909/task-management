@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-serif", lora.variable, robotoSlabHeading.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn("font-serif", lora.variable, robotoSlabHeading.variable)}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

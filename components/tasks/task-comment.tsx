@@ -10,18 +10,16 @@ import { useTaskDetail } from "@/hooks/useTaskDetail"
 
 import { ActivityLog } from "@/types/activity-log"
 import { Task } from "@/types/task"
-
+import {useState} from "react";
 type TaskDetailProps = {
     task: Task
 }
-
 const formatLogTime = (value: string) => {
     const date = new Date(value)
 
     if (Number.isNaN(date.getTime())) {
         return value
     }
-
     const datePart = date.toLocaleDateString("vi-VN")
     const timePart = date.toLocaleTimeString("vi-VN", {
         hour: "2-digit",
@@ -30,11 +28,13 @@ const formatLogTime = (value: string) => {
 
     return `${datePart} - ${timePart}`
 }
-
 export function TaskComment({ task }: TaskDetailProps) {
     const {
         availableUsers,
         commentValue,
+        mentionUsers,
+        mentionedUsers,
+        setMentionedUsers,
 
         timelineItems,
         auditLoading,
@@ -44,7 +44,8 @@ export function TaskComment({ task }: TaskDetailProps) {
         setCommentValue,
         handleCommentSubmit,
     } = useTaskDetail(task)
-
+    const [showMentionList, setShowMentionList] = useState(false)
+    const [mentionKeyword, setMentionKeyword] = useState("")
     const formatLogValue = (key: string, value: unknown) => {
         if (value === null || value === undefined || value === "") return "Trống"
 
@@ -83,18 +84,15 @@ export function TaskComment({ task }: TaskDetailProps) {
 
         return String(value)
     }
-
     const getLogChanges = (log: ActivityLog) => {
         const oldValue = (log.oldValue ?? {}) as Record<string, unknown>
         const newValue = (log.newValue ?? {}) as Record<string, unknown>
-
         const keys = Array.from(
             new Set([
                 ...Object.keys(oldValue),
                 ...Object.keys(newValue),
             ])
         )
-
         return keys
             .filter(
                 (key) =>
@@ -108,15 +106,38 @@ export function TaskComment({ task }: TaskDetailProps) {
                 to: formatLogValue(key, newValue[key]),
             }))
     }
-
+    const filteredUsers = mentionUsers.filter(
+        (user) =>
+            !mentionedUsers.some((m) => m.id === user.id) &&
+            user.name.toLowerCase().includes(
+                mentionKeyword.toLowerCase()
+            )
+    )
     return (
         <div className="space-y-4">
                 <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="relative flex items-center gap-2">
                             <Input
                                 placeholder="Bình luận"
                                 value={commentValue}
-                                onChange={(e) => setCommentValue(e.target.value)}
+                                onChange={(e) => {
+                                    const value = e.target.value
+                                    setCommentValue(value)
+                                    setMentionedUsers((prev) =>
+                                        prev.filter((user) =>
+                                            value.includes(`${user.name}`)
+                                        )
+                                    )
+                                    const match = value.match(/@([^\s@]*)$/)
+                                    console.log("match", match)
+                                    if (match) {
+                                        setShowMentionList(true)
+                                        setMentionKeyword(match[1])
+                                    } else {
+                                        setShowMentionList(false)
+                                        setMentionKeyword("")
+                                    }
+                                }}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         e.preventDefault()
@@ -132,6 +153,42 @@ export function TaskComment({ task }: TaskDetailProps) {
                             >
                                 Gửi
                             </Button>
+                            {showMentionList && filteredUsers.length > 0 && (
+                                <div className="absolute z-50 mt-4 w-max rounded-md border bg-background shadow">
+                                    {filteredUsers.map((user) => (
+                                        <button
+                                            key={user.id}
+                                            type="button"
+                                            className=" w-max px-3 py-2 text-left hover:bg-muted"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => {
+                                                const newValue = commentValue.replace(
+                                                    /@\w*$/,
+                                                    `${user.name} `
+                                                )
+
+                                                setCommentValue(newValue)
+
+                                                setMentionedUsers((prev) =>
+                                                    prev.some((u) => u.id === user.id)
+                                                        ? prev
+                                                        : [
+                                                            ...prev,
+                                                            {
+                                                                id: user.id,
+                                                                name: user.name,
+                                                            },
+                                                        ]
+                                                )
+
+                                                setShowMentionList(false)
+                                            }}
+                                        >
+                                            {user.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         {commentsError && <p className="text-sm text-red-500">{commentsError}</p>}
                 </div>

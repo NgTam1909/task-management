@@ -5,6 +5,7 @@ import {
     updateTask,
 } from "@/services/task.service"
 import { PriorityLevel } from "@/types/task"
+import {ActivityAction} from "@/models/activityLog.model";
 
 export function useTaskDetailHandlers(task: any, state: any) {
     const handleSelectUser = async (userId: string) => {
@@ -149,8 +150,16 @@ export function useTaskDetailHandlers(task: any, state: any) {
 
         try {
             state.setCommentsError(null)
-            await createTaskComment(task.id, content)
+            await createTaskComment(
+                task.id,
+                content,
+                state.mentionedUsers.map(
+                    (user: { id: string; name: string }) => user.id
+                )
+            )
             state.setCommentValue("")
+            state.setMentionedUsers([])
+
             window.dispatchEvent(new CustomEvent("task:updated"))
         } catch {
             state.setCommentsError("Không thể gửi bình luận")
@@ -158,7 +167,10 @@ export function useTaskDetailHandlers(task: any, state: any) {
     }
 
     const timelineItems = [
-        ...state.auditLogs.map((log: any) => ({
+        ...state.auditLogs.filter(
+            (log: any) =>
+                log.action !== "MENTION"
+        ).map((log: any) => ({
             id: `audit-${log.id}`,
             kind: "audit",
             createdAt: log.createdAt,

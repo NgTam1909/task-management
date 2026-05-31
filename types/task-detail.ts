@@ -1,11 +1,10 @@
-import { ActivityLog } from "@/types/activity-log"
+import {ActivityLog, ActivityUser} from "@/types/activity-log"
 
 export type AssigneeOption = {
     id: string
     name: string
     email?: string
-    position?: string | null
-    skills?: string[]
+    address?: string
 }
 
 export type AssigneeResponse = {
@@ -23,6 +22,10 @@ export type TaskComment = {
         name: string
         email?: string | null
     } | null
+    mentions?: {
+        id: string
+        name: string
+    }[]
 }
 
 export type TimelineItem =
@@ -67,6 +70,20 @@ export type UseTaskDetailResult = {
     commentsError: string | null
     commentValue: string
     setCommentValue: React.Dispatch<React.SetStateAction<string>>
+    mentionUsers: ActivityUser[]
+    setMentionUsers: React.Dispatch<
+        React.SetStateAction<ActivityUser[]>
+    >
+    mentionedUsers: {
+        id: string
+        name: string
+    }[]
+    setMentionedUsers: React.Dispatch<
+        React.SetStateAction<{
+                id: string
+                name: string
+            }[]>
+    >
     saveError: string | null
     dropdownRef: React.RefObject<HTMLDivElement | null>
     startDateRef: React.RefObject<HTMLInputElement | null>

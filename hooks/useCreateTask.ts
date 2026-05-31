@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { createTaskSchema, CreateTaskInput } from "@/lib/validations/task.validation"
 import { createTask as createTaskRequest } from "@/services/task.service"
-import { getTaskAssignees } from "@/services/task.service"
 import {TaskStatus, PriorityLevel, Task} from "@/types/task"
 import type { AssigneeOption, AssigneeResponse } from "@/types/task-detail"
+import {getTaskAssignees} from "@/services/project.service";
 
 type UseTaskFormProps = {
     projectId: string

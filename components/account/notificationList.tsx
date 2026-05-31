@@ -145,7 +145,7 @@ export default function NotificationList({
 
             {!logsLoading && !logsError && notifications.length === 0 && (
                 <div className="px-2 py-2 text-xs text-muted-foreground">
-                    Chưa có thông báo.
+                    Chào mừng bạn đã đến đây. Hãy hoạt động nhiều hơn để có thêm thông báo
                 </div>
             )}
 

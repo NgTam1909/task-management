@@ -2,10 +2,10 @@
 
 import { useEffect } from "react"
 import {
-    getTaskAssignees,
     getTaskAuditLogs,
     getTaskComments,
 } from "@/services/task.service"
+import {getProjectMentionUsers, getTaskAssignees} from "@/services/project.service";
 
 export function useTaskDetailEffects(task: any, state: any) {
     const loadAuditLogs = async () => {
@@ -108,6 +108,39 @@ export function useTaskDetailEffects(task: any, state: any) {
         }
 
         void loadAssignees()
+
+        return () => {
+            active = false
+        }
+    }, [task.projectId])
+    useEffect(() => {
+        if (!task.projectId) return
+
+        let active = true
+
+        const loadMentionUsers = async () => {
+            try {
+                const data = await getProjectMentionUsers(task.projectId)
+
+                if (!active) return
+
+                state.setMentionUsers(
+                    Array.isArray(data.mentions)
+                        ? data.mentions
+                        : []
+                )
+
+                if (data.currentUserId) {
+                    state.setCurrentUserId(data.currentUserId)
+                }
+            } catch {
+                if (active) {
+                    state.setMentionUsers([])
+                }
+            }
+        }
+
+        void loadMentionUsers()
 
         return () => {
             active = false

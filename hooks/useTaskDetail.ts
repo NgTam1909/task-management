@@ -5,6 +5,7 @@ import { Task } from "@/types/task"
 import { UseTaskDetailResult } from "@/types/task-detail"
 import { useTaskDetailEffects } from "./useTaskDetailEffect"
 import { useTaskDetailHandlers } from "./useTaskDetailHandlers"
+import {ActivityUser} from "@/types/activity-log";
 
 export function useTaskDetail(task: Task): UseTaskDetailResult {
     const [isOpen, setIsOpen] = useState(false)
@@ -32,7 +33,13 @@ export function useTaskDetail(task: Task): UseTaskDetailResult {
     const [comments, setComments] = useState([])
     const [commentsLoading, setCommentsLoading] = useState(false)
     const [commentsError, setCommentsError] = useState<string | null>(null)
-
+    const [mentionUsers, setMentionUsers] = useState<ActivityUser[]>([])
+    const [mentionedUsers, setMentionedUsers] = useState<
+        {
+            id: string
+            name: string
+        }[]
+    >([])
     const [commentValue, setCommentValue] = useState("")
     const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -83,6 +90,10 @@ export function useTaskDetail(task: Task): UseTaskDetailResult {
         setCommentsLoading,
         commentsError,
         setCommentsError,
+        mentionUsers,
+        setMentionUsers,
+        mentionedUsers,
+        setMentionedUsers,
 
         commentValue,
         setCommentValue,

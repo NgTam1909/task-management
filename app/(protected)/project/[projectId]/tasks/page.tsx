@@ -6,8 +6,9 @@ import { useParams } from "next/navigation"
 import { KanbanColumn } from "@/components/tasks/task-list"
 import { Task, TaskStatus } from "@/types/task"
 import {  ProjectInfo } from "@/types/project"
-import { getProjectTasks, updateTask } from "@/services/task.service"
+import { updateTask } from "@/services/task.service"
 import { toTaskDetail } from "@/lib/mappers/task"
+import {getProjectTasks} from "@/services/project.service";
 const statusColumns: Array<{ title: string; status: TaskStatus }> = [
     { title: "Backlog", status: TaskStatus.BACKLOG },
     { title: "Todo", status: TaskStatus.TODO },
