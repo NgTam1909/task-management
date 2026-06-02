@@ -111,6 +111,8 @@ export async function GET(
                                   name: `${u.lastName ?? ""} ${u.firstName ?? ""}`.trim(),
                               }))
                               : [],
+                          parentCommentId:
+                              comment.parentCommentId?.toString?.() ?? null,
                           createdAt:
                               comment.createdAt instanceof Date
                                   ? comment.createdAt.toISOString()
@@ -147,11 +149,29 @@ export async function POST(
         const body = (await req.json()) as {
             content?: string
             mentions?: string[]
+            parentCommentId?: string
         }
         const content = body.content?.trim()
         const mentions = body.mentions ?? []
-        const project = await Project.findById(access.task.projectId)
+        const parentCommentId = body.parentCommentId ?? null
+        if (parentCommentId) {
+            const parentComment = access.task.comments?.find(
+                (comment) =>
+                    comment._id?.toString() === parentCommentId
+            )
 
+            if (!parentComment) {
+                return NextResponse.json(
+                    {
+                        message: "Không tìm thấy bình luận gốc",
+                    },
+                    {
+                        status: 404,
+                    }
+                )
+            }
+        }
+        const project = await Project.findById(access.task.projectId)
         if (!project) {
             return NextResponse.json(
                 { message: "Không tìm thấy dự án" },
@@ -188,6 +208,9 @@ export async function POST(
                 mentions: validMentions.map(
                     (id) => new mongoose.Types.ObjectId(id)
                 ),
+                parentCommentId: parentCommentId
+                    ? new mongoose.Types.ObjectId(parentCommentId)
+                    : null,
 
                 createdAt: new Date(),
             },

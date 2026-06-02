@@ -5,7 +5,6 @@ import {
     updateTask,
 } from "@/services/task.service"
 import { PriorityLevel } from "@/types/task"
-import {ActivityAction} from "@/models/activityLog.model";
 
 export function useTaskDetailHandlers(task: any, state: any) {
     const handleSelectUser = async (userId: string) => {
@@ -154,11 +153,16 @@ export function useTaskDetailHandlers(task: any, state: any) {
                 task.id,
                 content,
                 state.mentionedUsers.map(
-                    (user: { id: string; name: string }) => user.id
-                )
+                    (user: {
+                        id: string
+                        name: string
+                    }) => user.id
+                ),
+                state.replyTo
             )
             state.setCommentValue("")
             state.setMentionedUsers([])
+            state.setReplyTo(null)
 
             window.dispatchEvent(new CustomEvent("task:updated"))
         } catch {

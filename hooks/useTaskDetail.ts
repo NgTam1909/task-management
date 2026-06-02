@@ -41,6 +41,9 @@ export function useTaskDetail(task: Task): UseTaskDetailResult {
         }[]
     >([])
     const [commentValue, setCommentValue] = useState("")
+    const [replyTo, setReplyTo] = useState<string | null>(
+        null
+    )
     const [saveError, setSaveError] = useState<string | null>(null)
 
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -94,6 +97,8 @@ export function useTaskDetail(task: Task): UseTaskDetailResult {
         setMentionUsers,
         mentionedUsers,
         setMentionedUsers,
+        replyTo,
+        setReplyTo,
 
         commentValue,
         setCommentValue,

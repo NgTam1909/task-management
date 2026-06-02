@@ -7,9 +7,9 @@ export interface ITaskComment {
     userId: mongoose.Types.ObjectId;
     content: string;
     mentions: mongoose.Types.ObjectId [];
+    parentCommentId?: mongoose.Types.ObjectId | null;
     createdAt: Date;
 }
-
 
 export interface ITask extends Document {
     code: string;
@@ -130,6 +130,10 @@ const TaskSchema = new Schema<ITask>(
                         ref: "User",
                     },
                 ],
+                parentCommentId: {
+                    type: Schema.Types.ObjectId,
+                    default: null,
+                },
                 createdAt: {
                     type: Date,
                     default: Date.now,

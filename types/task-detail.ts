@@ -15,6 +15,7 @@ export type AssigneeResponse = {
 
 export type TaskComment = {
     id: string
+    parentCommentId?: string | null
     content: string
     createdAt: string
     user?: {
@@ -26,6 +27,7 @@ export type TaskComment = {
         id: string
         name: string
     }[]
+    replies?: TaskComment[]
 }
 
 export type TimelineItem =
@@ -53,6 +55,7 @@ export type UseTaskDetailResult = {
     startDateValue: string
     dueDateValue: string
     estimateValue: string
+
     isEditingTitle: boolean
     isEditingDescription: boolean
     isEditingEstimate: boolean
@@ -62,6 +65,7 @@ export type UseTaskDetailResult = {
     setTitleValue: React.Dispatch<React.SetStateAction<string>>
     setDescriptionValue: React.Dispatch<React.SetStateAction<string>>
     setEstimateValue: React.Dispatch<React.SetStateAction<string>>
+
     auditLogs: ActivityLog[]
     auditLoading: boolean
     auditError: string | null
@@ -83,6 +87,10 @@ export type UseTaskDetailResult = {
                 id: string
                 name: string
             }[]>
+    >
+    replyTo: string | null
+    setReplyTo: React.Dispatch<
+        React.SetStateAction<string | null>
     >
     saveError: string | null
     dropdownRef: React.RefObject<HTMLDivElement | null>

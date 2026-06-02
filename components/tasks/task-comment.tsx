@@ -11,6 +11,7 @@ import { useTaskDetail } from "@/hooks/useTaskDetail"
 import { ActivityLog } from "@/types/activity-log"
 import { Task } from "@/types/task"
 import {useState} from "react";
+import {MessageCircleX, MessageSquareReply} from "lucide-react";
 type TaskDetailProps = {
     task: Task
 }
@@ -43,6 +44,9 @@ export function TaskComment({ task }: TaskDetailProps) {
         commentsError,
         setCommentValue,
         handleCommentSubmit,
+        replyTo,
+        setReplyTo,
+        comments,
     } = useTaskDetail(task)
     const [showMentionList, setShowMentionList] = useState(false)
     const [mentionKeyword, setMentionKeyword] = useState("")
@@ -113,10 +117,54 @@ export function TaskComment({ task }: TaskDetailProps) {
                 mentionKeyword.toLowerCase()
             )
     )
+    const replyingComment = comments.find(
+        (c) => c.id === replyTo
+    )
+    const scrollToComment = (commentId: string) => {
+        const element = document.getElementById(
+            `comment-${commentId}`
+        )
+
+        if (!element) return
+
+        element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+        })
+
+        element.classList.add(
+            "ring-2",
+            "ring-primary"
+        )
+
+        setTimeout(() => {
+            element.classList.remove(
+                "ring-2",
+                "ring-primary"
+            )
+        }, 2000)
+    }
     return (
         <div className="space-y-4">
                 <div className="space-y-2">
                         <div className="relative flex items-center gap-2">
+                            {replyTo && (
+                                <div className="flex items-center justify-between rounded border px-2 py-1 text-sm">
+                                    <span>
+                                        Đang trả lời{" "}
+                                        <span>
+                                            {replyingComment?.user?.name}
+                                        </span>
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setReplyTo(null)}
+                                    >
+                                        <MessageCircleX />
+                                    </Button>
+                                </div>
+                            )}
                             <Input
                                 placeholder="Bình luận"
                                 value={commentValue}
@@ -200,19 +248,54 @@ export function TaskComment({ task }: TaskDetailProps) {
                         <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                             {timelineItems.map((item) => {
                                 if (item.kind === "comment") {
+                                    const parentComment = comments.find(
+                                        c => c.id === item.comment.parentCommentId
+                                    )
                                     return (
-                                        <div key={item.id} className="rounded-md border p-2">
+                                        <div
+                                            id={`comment-${item.comment.id}`}
+                                            key={item.id}
+                                            className="group rounded-md border p-2 w-max"
+                                        >
+                                            {parentComment && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        scrollToComment(parentComment.id)
+                                                    }
+                                                    className="mt-2 mb-2 block w-full rounded bg-muted px-2 py-1 text-left text-xs text-muted-foreground hover:bg-muted/80"
+                                                >
+                                                    ↳ "
+                                                    {parentComment.content.length > 80
+                                                        ? parentComment.content.slice(0, 80) + "..."
+                                                        : parentComment.content}
+                                                    "
+                                                </button>
+                                            )}
+                                            <div className="flex  justify-between">
                                             <div className="text-sm font-medium">Bình luận</div>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="invisible h-7 px-2 group-hover:visible "
+                                                onClick={() =>
+                                                    setReplyTo(item.comment.id)
+                                                }
+                                            >
+                                                <MessageSquareReply />
+                                            </Button>
+                                            </div>
                                             <div className="text-xs text-muted-foreground">
                                                 {(item.comment.user?.name ?? "Hệ thống") +
                                                     "  " +
                                                     formatLogTime(item.comment.createdAt)}
                                             </div>
-                                            <div className="mt-2 text-sm">{item.comment.content}</div>
+                                            <div className="text-sm">
+                                                {item.comment.content}
+                                            </div>
                                         </div>
                                     )
                                 }
-
                                 const changes = getLogChanges(item.log)
                                 return (
                                     <div key={item.id} className="rounded-md border p-2">

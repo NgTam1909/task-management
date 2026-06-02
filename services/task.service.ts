@@ -1,8 +1,8 @@
 import {GET_METHOD, PATCH_METHOD, POST_METHOD} from "@/lib/req"
 import { CreateTaskInput, UpdateTaskInput } from "@/lib/validations/task.validation"
 import { ActivityLog } from "@/types/activity-log"
-import { ApiResponse, ApiTask } from "@/types/project"
-import { AssigneeResponse, TaskComment } from "@/types/task-detail"
+import {  ApiTask } from "@/types/project"
+import { TaskComment } from "@/types/task-detail"
 import {Task} from "@/types/task";
 
 export async function createTask(data: CreateTaskInput) {
@@ -28,13 +28,15 @@ export async function getTaskSubtasks(taskId: string) {
 export async function createTaskComment(
     taskId: string,
     content: string,
-    mentions: string[] = []
+    mentions: string[] = [],
+    parentCommentId?: string | null
 ) {
     return POST_METHOD(
         `/api/task/${taskId}/comments`,
         {
             content,
             mentions,
+            parentCommentId,
         }
     )
 }
