@@ -69,6 +69,14 @@ function NavProjectsContent() {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                        <Link href="/admin">
+                            <Home size={16} />
+                            <span>Quản trị hệ thống</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarGroup>
             <SidebarGroup>
