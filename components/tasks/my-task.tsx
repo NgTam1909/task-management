@@ -125,7 +125,7 @@ export function MyTasks() {
 
   if (loading) {
     return (
-        <div className="flex min-h-[320px] items-center justify-center">
+        <div className="flex min-h-80 items-center justify-center">
           <div className="text-sm text-muted-foreground">
             Đang tải...
           </div>
@@ -135,26 +135,31 @@ export function MyTasks() {
 
   return (
       <section className="w-full py-2">
-        <div className="w-full overflow-x-auto p-3">
+        <div className="w-full p-3">
           {/* Header */}
-          <div className="hidden xl:grid grid-cols-[140px_1fr_100px_150px_160px] gap-2 border">
+          <div className="hidden xl:grid grid-cols-[140px_1fr_100px_150px_160px] gap-2 border bg-white sticky top-0 z-10">
             <div className="px-4 py-2 text-sm text-center font-semibold">Mã</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Nội dung</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Thời gian</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Ưu tiên</div>
             <div className="px-4 py-2 text-sm font-semibold">Trạng thái</div>
           </div>
-          <div >
-            {/* Nội dung - TaskRow tự xử lý mobile/desktop */}
+
+          {/* Nội dung scroll */}
+          <div className="max-h-100 overflow-y-auto border-x border-b">
             {error ? (
-                <div className="px-5 py-6 text-sm text-red-600">{error}</div>
+                <div className="px-5 py-6 text-sm text-red-600">
+                  {error}
+                </div>
             ) : sortedTasks.length === 0 ? (
                 <div className="px-5 py-10 text-sm text-muted-foreground">
                   Không có công việc nào
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4">
-                  {sortedTasks.map((task) => <TaskRow key={task.id} task={task} />)}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4 p-2">
+                  {sortedTasks.map((task) => (
+                      <TaskRow key={task.id} task={task} />
+                  ))}
                 </div>
             )}
           </div>

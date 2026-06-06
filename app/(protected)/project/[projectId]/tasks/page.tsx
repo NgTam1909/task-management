@@ -163,7 +163,7 @@ export default function ProjectTaskListPage() {
     return (
         <div className="space-y-6">
             <section className="space-y-2">
-                <h1 className="text-xl font-semibold">{project?.title ?? "Task list"}</h1>
+                <h1 className="text-xl font-semibold">{project?.title ?? "Danh sách công việc"}</h1>
                 {project?.projectId && (
                     <p className="text-sm text-muted-foreground">{project.projectId}</p>
                 )}

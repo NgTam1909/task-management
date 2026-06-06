@@ -4,7 +4,7 @@ import {Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-    Home,
+    Home, LibraryBig,
     Plus,
 } from "lucide-react";
 
@@ -33,6 +33,7 @@ import { useProjectList} from "@/hooks/useProjectList"
 import ProjectList from "@/components/projects/project-list";
 function NavProjectsContent() {
     const nav = useProjectList()
+    const [isGod, setIsGod] = useState(false);
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const projects = nav.projects;
@@ -57,8 +58,27 @@ function NavProjectsContent() {
         setTaskDialogParentId(routeParentId);
     }, [pathname, projects, searchParams]);
 
+    useEffect(() => {
+        async function loadUser() {
+            try {
+                const res = await fetch("/api/auth/me");
+
+                if (!res.ok) return;
+
+                const data = await res.json();
+
+                console.log(data);
+
+                setIsGod(data.isGod === true);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        loadUser();
+    }, []);
     return (
-        <SidebarContent className="w-fit flex-none min-w-[200px] max-w-[280px]">
+        <SidebarContent className="w-fit flex-none min-w-50 max-w-70">
             <SidebarGroup>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -69,29 +89,33 @@ function NavProjectsContent() {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                        <Link href="/admin">
-                            <Home size={16} />
-                            <span>Quản trị hệ thống</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
+                    {isGod && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <Link href="/admin">
+                                    <LibraryBig  size={16} />
+                                    <span>Quản trị hệ thống</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
                 </SidebarMenu>
             </SidebarGroup>
             <SidebarGroup>
                 <SidebarGroupLabel>Dự án</SidebarGroupLabel>
-                <ProjectList
-                    loading={nav.loading}
-                    projects={nav.projects}
-                    deletingId={nav.deletingId}
-                    onDelete={nav.handleDelete}
-                    onOpenMembers={nav.openMembersDialog}
-                    onOpenSettings={nav.openSettingsDialog}
-                    onOpenTask={nav.openTaskDialog}
-                />
-            </SidebarGroup>
 
+                <div className="max-h-100 overflow-y-auto">
+                    <ProjectList
+                        loading={nav.loading}
+                        projects={nav.projects}
+                        deletingId={nav.deletingId}
+                        onDelete={nav.handleDelete}
+                        onOpenMembers={nav.openMembersDialog}
+                        onOpenSettings={nav.openSettingsDialog}
+                        onOpenTask={nav.openTaskDialog}
+                    />
+                </div>
+            </SidebarGroup>
             <SidebarGroup>
                 <SidebarMenu>
                     <SidebarMenuItem>

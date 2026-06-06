@@ -1,8 +1,6 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { Task, TaskStatus } from "@/types/task";
 import { TaskCard } from "./task-card";
 
@@ -49,7 +47,7 @@ export function KanbanColumn({
             </div>
 
             {/* Tasks */}
-            <ScrollArea className="h-[600px] pr-2">
+            <ScrollArea className="h-110 pr-2">
                 {tasks.map((task) => (
                     <TaskCard
                         key={task.id}

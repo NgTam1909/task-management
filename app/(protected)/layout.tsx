@@ -38,8 +38,10 @@ export default function DashboardLayout({
     return (
         <SidebarProvider>
             <div className="flex min-h-svh w-screen flex-col bg-muted/40">
+                <div className="sticky top-0 z-50 bg-background border-b">
                 {/* NAV TOP */}
                 <DashboardHeader />
+                </div>
 
                 <div className="flex w-full flex-1 gap-6 px-3 sm:px-4 py-6">
                     {/* LEFT */}
