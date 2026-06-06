@@ -10,6 +10,7 @@ export interface UserPayload extends JWTPayload {
     firstName?: string
     lastName?: string
     email?: string
+    isGod?: boolean
 }
 
 export async function getCurrentUser(): Promise<UserPayload | null> {

@@ -49,9 +49,15 @@ export async function proxy(request: NextRequest) {
     }
 
     // RBAC
-    if (pathname.startsWith("/dashboard/admin")) {
+    const isAdminRoute =
+        pathname === "/admin" ||
+        pathname.startsWith("/admin/")
+
+    if (isAdminRoute) {
         if (payload?.isGod !== true) {
-            return NextResponse.redirect(new URL("/dashboard", request.url))
+            return NextResponse.redirect(
+                new URL("/dashboard", request.url)
+            )
         }
     }
 
