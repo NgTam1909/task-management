@@ -207,8 +207,11 @@ export async function DELETE(
         }
 
         // Kiểm tra nếu project đã bị xóa mềm
-        if (project.isActive === false) {
-            return NextResponse.json({ message: "Dự án đã bị xóa trước đó" }, { status: 400 })
+        if (!project.isActive) {
+            return NextResponse.json(
+                { message: "Dự án đã bị xóa trước đó" },
+                { status: 400 }
+            );
         }
 
         if (!project.owner?.userId?.equals(userId)) {

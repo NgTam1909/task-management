@@ -30,7 +30,6 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
     const router = useRouter()
     // hiển thị một phương án dự phòng ổn định trên máy chủ.
     const [mounted, setMounted] = useState(false)
-
     useEffect(() => {
         setMounted(true)
     }, [])
