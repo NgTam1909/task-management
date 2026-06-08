@@ -20,27 +20,40 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-
-import { Badge } from "@/components/ui/badge";
-
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {useEffect, useState} from "react";
+import {AdminUser} from "@/types/admin";
+import {adminService} from "@/services/admin.service";
 
-const users = [
-    {
-        id: 1,
-        name: "Nguyễn Thị Tâm",
-        email: "ngttam04@gmail.com",
-        status: "Active",
-        lastLogin: "12:35 16/05/2026",
-    },
-];
 
 export function UserManagement() {
+    const [users, setUsers] = useState<AdminUser[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
+    const fetchUsers = async (
+        keyword = ""
+    ) => {
+        try {
+            setLoading(true);
+
+            const data =
+                await adminService.getUsers(
+                    keyword
+                );
+
+            setUsers(data.data ?? []);
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchUsers();
+    }, []);
     return (
         <Card>
             <CardHeader>
@@ -53,14 +66,20 @@ export function UserManagement() {
                 <div className="flex gap-3">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-
                         <Input
+                            value={search}
+                            onChange={(e) =>
+                                setSearch(e.target.value)
+                            }
                             placeholder="Tìm kiếm người dùng..."
                             className="pl-9"
                         />
                     </div>
-
-                    <Button>
+                    <Button
+                        onClick={() =>
+                            fetchUsers(search)
+                        }
+                    >
                         Tìm kiếm
                     </Button>
                 </div>
@@ -71,64 +90,75 @@ export function UserManagement() {
                             <TableHead>STT</TableHead>
                             <TableHead>Họ tên</TableHead>
                             <TableHead>Email</TableHead>
-                            <TableHead>Trạng thái</TableHead>
+                            {/*<TableHead>Trạng thái</TableHead>*/}
                             <TableHead>Đăng nhập lần cuối</TableHead>
-                            <TableHead className="w-[60px]" />
+                            <TableHead className="w-15" />
                         </TableRow>
                     </TableHeader>
+                     <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="text-center"
+                                    >
+                                        Đang tải...
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                users?.map((user, index) => (
+                                    <TableRow key={user._id}>
+                                        <TableCell>{index + 1}</TableCell>
 
-                    <TableBody>
-                        {users.map((user, index) => (
-                            <TableRow key={user.id}>
-                                <TableCell>{index + 1}</TableCell>
+                                        <TableCell>
+                                            {user.lastName}
+                                            {" "}
+                                            {user.firstName}
+                                        </TableCell>
 
-                                <TableCell className="font-medium">
-                                    {user.name}
-                                </TableCell>
+                                        <TableCell>
+                                            {user.email}
+                                        </TableCell>
 
-                                <TableCell>
-                                    {user.email}
-                                </TableCell>
+                                        {/*<TableCell>*/}
+                                        {/*    <Badge>*/}
+                                        {/*        {user.status}*/}
+                                        {/*    </Badge>*/}
+                                        {/*</TableCell>*/}
 
-                                <TableCell>
-                                    <Badge>
-                                        {user.status}
-                                    </Badge>
-                                </TableCell>
+                                        <TableCell>
+                                            {user.lastLoginAt}
+                                        </TableCell>
 
-                                <TableCell>
-                                    {user.lastLogin}
-                                </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
 
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                            >
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem>
+                                                        Xem chi tiết
+                                                    </DropdownMenuItem>
 
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>
-                                                Xem chi tiết
-                                            </DropdownMenuItem>
+                                                    <DropdownMenuItem>
+                                                        Khóa tài khoản
+                                                    </DropdownMenuItem>
 
-                                            <DropdownMenuItem>
-                                                Khóa tài khoản
-                                            </DropdownMenuItem>
-
-                                            <DropdownMenuItem>
-                                                Đổi vai trò
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
+                                                    <DropdownMenuItem>
+                                                        Đổi vai trò
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>                                ))
+                                )}
+                        </TableBody>
                 </Table>
             </CardContent>
         </Card>

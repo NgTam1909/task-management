@@ -14,37 +14,71 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/user-management";
 import { ProjectManagement } from "@/components/admin/project-management";
+import {adminService} from "@/services/admin.service";
+import {useEffect, useState} from "react";
+import {AdminStats} from "@/types/admin";
 
 export default function AdminPageContent() {
-    const stats = [
+    const [mounted, setMounted] = useState(false);
+
+    const [stats, setStats] = useState<AdminStats | null>(null);
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data =
+                    await adminService.getStats();
+
+                setStats(data);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    if (!mounted) {
+        return null;
+    }
+    const statCards = [
         {
             title: "Tổng người dùng",
-            value: 120,
+            value: stats?.totalUsers ?? 0,
             icon: Users,
         },
         {
-            title: "Đang hoạt động",
-            value: 115,
+            title: "Dự án hoạt động",
+            value: stats?.activeProjects ?? 0,
             icon: FolderOpenDot,
         },
         {
             title: "Tổng dự án",
-            value: 32,
+            value: stats?.totalProjects ?? 0,
             icon: FolderKanban,
         },
         {
-            title: "Đã lưu trữ",
-            value: 4,
+            title: "Đã xóa mềm",
+            value: stats?.deletedProjects ?? 0,
             icon: Archive,
         },
     ];
     return (
+
         <div className="container mx-auto py-6 space-y-6">
             <h1 className="text-3xl font-bold text-center">
                 Quản trị hệ thống
             </h1>
+            {loading ? (
+            <p className="text-sm text-muted-foreground">Đang tải...</p>
+        ):(
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {stats.map((item) => {
+                {statCards.map((item) => {
                     const Icon = item.icon;
 
                     return (
@@ -64,6 +98,7 @@ export default function AdminPageContent() {
                     );
                 })}
             </div>
+            )}
             <Tabs defaultValue="users">
                 <TabsList className="grid w-full grid-cols-2 h-12">
                     <TabsTrigger value="users">
@@ -71,7 +106,7 @@ export default function AdminPageContent() {
                     </TabsTrigger>
 
                     <TabsTrigger value="projects">
-                        Quản trị dự án
+                        Quản lý dữ liệu dự án
                     </TabsTrigger>
                 </TabsList>
 
@@ -84,5 +119,6 @@ export default function AdminPageContent() {
                 </TabsContent>
             </Tabs>
         </div>
+
     );
 }

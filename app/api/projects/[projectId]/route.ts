@@ -1,11 +1,11 @@
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import dbConnect from "@/lib/db"
 import Project, { IProjectMember } from "@/models/project.model"
 import {ProjectRole} from "@/types/project";
 import { updateProjectSchema } from "@/lib/validations/project.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
+import dbConnect from "@/lib/db";
 
 function slugify(input: string) {
     const normalized = input
