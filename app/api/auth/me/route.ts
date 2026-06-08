@@ -10,9 +10,7 @@ export async function GET(req: NextRequest) {
         if (!userId) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
-
         await dbConnect()
-        // Thay đổi: Lấy trường "address", loại bỏ "position" và "skills"
         const user = await User.findById(userId).select(
             "firstName lastName phone email isGod address"
         )
@@ -75,7 +73,7 @@ export async function PATCH(req: NextRequest) {
         const nextUser = await User.findByIdAndUpdate(
             userId,
             { $set: update },
-            { returnDocument: 'after', runValidators: true } // ✅ Dùng returnDocument: 'after'
+            { returnDocument: 'after', runValidators: true }
         ).select("firstName lastName phone email isGod address")
 
         return NextResponse.json({ success: true, user: nextUser })
