@@ -1,12 +1,7 @@
-// hooks/useRegisterForm.ts
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { POST_METHOD } from "@/lib/req"
 import {RegisterFormData} from "@/types/user";
 import {AuthService} from "@/services/auth.service";
-
-
-
 export function useRegisterForm() {
     const router = useRouter()
 
