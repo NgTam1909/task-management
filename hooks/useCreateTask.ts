@@ -120,7 +120,6 @@ export function useCreateTask({ projectId, parentId, onSuccess }: UseTaskFormPro
                 assignees: defaultAssignee,
             })
 
-            // 👉 Dispatch event để các component khác refresh
             window.dispatchEvent(new CustomEvent('task:created', {
                 detail: createdTask
             }))
