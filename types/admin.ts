@@ -16,6 +16,7 @@ export interface AdminUser {
 
 export interface AdminProject {
     _id: string;
+    projectId: string;
     title: string;
     status: string;
     createdAt: string;

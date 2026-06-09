@@ -6,31 +6,9 @@ import {ProjectRole} from "@/types/project";
 import { createProjectSchema } from "@/lib/validations/project.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
+import {generateProjectId} from "@/lib/generateId";
 
-function slugify(input: string) {
-    const normalized = input
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
 
-    return normalized || "project"
-}
-
-async function generateProjectId(title: string) {
-    const base = slugify(title)
-    let projectId = base
-    let counter = 1
-
-    while (await Project.exists({ projectId })) {
-        projectId = `${base}-${counter}`
-        counter += 1
-    }
-
-    return projectId
-}
 
 export async function GET(req: NextRequest) {
     try {
@@ -45,12 +23,12 @@ export async function GET(req: NextRequest) {
             isActive: true,
             $or: [{ "owner.userId": userId }, { "members.userId": userId }],
         })
-            .select("title projectId isPublic createdAt")
+            .select("title projectId isPublic createdAt startDate endDate")
             .sort({ createdAt: -1 })
 
         for (const project of projects) {
             if (!project.projectId) {
-                project.projectId = await generateProjectId(project.title)
+                project.projectId = await generateProjectId()
                 await project.save()
             }
         }
@@ -80,16 +58,18 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        const { title, description, visibility } = parsed.data
+        const { title, description,startDate, endDate, visibility } = parsed.data
 
         await dbConnect()
 
-        const projectId = await generateProjectId(title)
+        const projectId = await generateProjectId()
 
         const project = new Project({
             title,
             projectId,
             description,
+            startDate: startDate ? new Date(startDate) : null,
+            endDate: endDate ? new Date(endDate) : null,
             isPublic: visibility === "public",
             isActive: true,
             owner: {
@@ -117,6 +97,8 @@ export async function POST(req: NextRequest) {
                 newValue: {
                     title: project.title,
                     description: project.description ?? "",
+                    startDate: project.startDate,
+                    endDate: project.endDate,
                     isPublic: project.isPublic,
                 },
             })
@@ -129,6 +111,8 @@ export async function POST(req: NextRequest) {
                 _id: project._id,
                 title: project.title,
                 projectId: project.projectId,
+                startDate: project.startDate ? project.startDate.toISOString().split('T')[0] : "",
+                endDate: project.endDate ? project.endDate.toISOString().split('T')[0] : "",
                 isPublic: project.isPublic,
             },
             { status: 201 }

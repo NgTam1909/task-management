@@ -41,16 +41,14 @@ export async function GET(req: NextRequest) {
 
             return {
                 _id: project._id,
-
+                projectId: project.projectId,
                 title: project.title,
-
                 owner:
                     project.owner?.userId
                         ? `${project.owner.userId.lastName} ${project.owner.userId.firstName}`
                         : "Không xác định",
 
                 taskCount,
-
                 memberCount:
                     project.members?.length ?? 0,
                 isPublic: project.isPublic,
