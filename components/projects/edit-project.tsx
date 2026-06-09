@@ -38,7 +38,8 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
         resolver: zodResolver(updateProjectSchema),
         defaultValues: {
             title: "",
-            projectId: "",
+            startDate: "",
+            endDate: "",
             description: "",
             visibility: "private",
         },
@@ -58,7 +59,8 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
                 if (!active) return
                 form.reset({
                     title: data.title ?? "",
-                    projectId: data.projectId ?? "",
+                    startDate:data.startDate ?? "",
+                    endDate:data.endDate ?? "",
                     description: data.description ?? "",
                     visibility: data.isPublic ? "public" : "private",
                 })
@@ -114,22 +116,7 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="projectId"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Mã dự án</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="VD: DA001, PROJECT-ABC, ..."
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+
                         <FormField
                             control={form.control}
                             name="description"
@@ -146,7 +133,40 @@ export default function EditProject({ projectId, onSuccessAction }: EditProjectP
                                 </FormItem>
                             )}
                         />
-
+                        <FormField
+                            control={form.control}
+                            name="startDate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ngày bắt đầu</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="date"
+                                            placeholder="Chọn ngày bắt đầu"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="endDate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ngày kết thúc</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="date"
+                                            placeholder="Chọn ngày kết thúc"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="visibility"

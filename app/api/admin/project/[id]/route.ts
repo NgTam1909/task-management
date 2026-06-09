@@ -8,14 +8,14 @@ import mongoose from "mongoose";
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ projectId: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const userId = await getUserIdFromRequest(req)
         if (!userId) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
-        const { projectId } = await params
+        const { id: projectId } = await params
         if (!projectId) {
             return NextResponse.json({ message: "Không thấy projectId" }, { status: 400 })
         }
@@ -36,6 +36,8 @@ export async function GET(
             projectId: project.projectId,
             title: project.title,
             description: project.description ?? "",
+            startDate: project.startDate ?? undefined,
+            endDate: project.endDate ?? undefined,
             isPublic: project.isPublic,
         })
     } catch {

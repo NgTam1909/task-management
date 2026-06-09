@@ -7,30 +7,6 @@ import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
 import dbConnect from "@/lib/db";
 
-function slugify(input: string) {
-    const normalized = input
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-
-    return normalized || "project"
-}
-
-async function generateProjectId(title: string) {
-    const base = slugify(title)
-    let projectId = base
-    let counter = 1
-
-    while (await Project.exists({ projectId })) {
-        projectId = `${base}-${counter}`
-        counter += 1
-    }
-
-    return projectId
-}
 async function findProjectByParam(projectId: string) {
     let project = await Project.findOne({ projectId, isActive: true })
     if (!project && mongoose.isValidObjectId(projectId)) {
@@ -85,6 +61,8 @@ export async function GET(
             projectId: project.projectId,
             title: project.title,
             description: project.description ?? "",
+            startDate: project.startDate ? project.startDate.toISOString().split('T')[0] : "",
+            endDate: project.endDate ? project.endDate.toISOString().split('T')[0] : "",
             isPublic: project.isPublic,
         })
     } catch {
@@ -133,17 +111,15 @@ export async function PATCH(
 
         const oldValue = {
             title: project.title,
-            projectId: project.projectId ?? "",
             description: project.description ?? "",
+            startDate: project.startDate,
+            endDate: project.endDate,
             isPublic: project.isPublic,
         }
-        let finalProjectId = project.projectId
-        if (parsed.data.projectId && parsed.data.projectId !== project.projectId) {
-            finalProjectId = await generateProjectId(parsed.data.projectId)
-        }
         project.title = parsed.data.title
-        project.projectId = finalProjectId
         project.description = parsed.data.description ?? ""
+        project.startDate = parsed.data.startDate ? new Date(parsed.data.startDate) : undefined
+        project.endDate = parsed.data.endDate ? new Date(parsed.data.endDate) : undefined
         project.isPublic = parsed.data.visibility === "public"
         await project.save()
 
@@ -158,6 +134,8 @@ export async function PATCH(
                 newValue: {
                     title: project.title,
                     description: project.description ?? "",
+                    startDate: project.startDate,
+                    endDate: project.endDate,
                     isPublic: project.isPublic,
                 },
             })
@@ -170,6 +148,8 @@ export async function PATCH(
             projectId: project.projectId,
             title: project.title,
             description: project.description ?? "",
+            startDate: project.startDate ? project.startDate.toISOString().split('T')[0] : "",
+            endDate: project.endDate ? project.endDate.toISOString().split('T')[0] : "",
             isPublic: project.isPublic,
         })
     } catch {
@@ -246,6 +226,8 @@ export async function DELETE(
                 oldValue: {
                     title: project.title,
                     description: project.description ?? "",
+                    startDate: project.startDate,
+                    endDate: project.endDate,
                     isPublic: project.isPublic,
                 },
                 metadata: {

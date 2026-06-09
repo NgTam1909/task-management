@@ -38,6 +38,8 @@ export default function CreateProject({ onSuccessAction }: CreateProjectProps) {
         defaultValues: {
             title: "",
             description: "",
+            startDate: "",
+            endDate: "",
             visibility: "private",
         },
     })
@@ -98,7 +100,45 @@ export default function CreateProject({ onSuccessAction }: CreateProjectProps) {
                             </FormItem>
                         )}
                     />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="startDate"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Ngày bắt đầu</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="date"
+                                        max={form.getValues("endDate") || undefined}
+                                        {...field}
+                                        value={field.value ?? ""}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
+                    <FormField
+                        control={form.control}
+                        name="endDate"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Ngày kết thúc</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="date"
+                                        // min={form.getValues("startDate") || new Date().toISOString().slice(0, 10)}
+                                        {...field}
+                                        value={field.value ?? ""}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    </div>
                     {/* Visibility */}
                     <FormField
                         control={form.control}

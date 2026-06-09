@@ -60,6 +60,8 @@ export type ProjectDetail = {
     title: string
     projectId?: string
     description?: string
+    startDate: string
+    endDate: string
     isPublic: boolean
 }
 export type ProjectMember = {

@@ -1,8 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import {ProjectRole} from "@/types/project";
-
-
-
 export interface IProjectMember {
     userId: mongoose.Types.ObjectId;
     role: ProjectRole;
@@ -17,6 +14,8 @@ export interface IProject extends Document {
     members: IProjectMember[];
     isPublic: boolean;
     isActive: boolean;
+    startDate?: Date;
+    endDate?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -72,6 +71,12 @@ const ProjectSchema = new Schema<IProject>(
                 },
             },
         ],
+        startDate: {
+            type: Date,
+        },
+        endDate: {
+            type: Date,
+        },
         isPublic: {
             type: Boolean,
             default: false,

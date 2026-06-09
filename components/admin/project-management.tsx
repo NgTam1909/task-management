@@ -105,7 +105,7 @@ export function ProjectManagement() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>STT</TableHead>
+                            <TableHead>Mã dự án</TableHead>
                             <TableHead>Tên dự án</TableHead>
                             <TableHead>Chủ dự án</TableHead>
                             <TableHead className="text-center">Task</TableHead>
@@ -126,9 +126,9 @@ export function ProjectManagement() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            projects?.map((project, index) => (
+                            projects?.map((project) => (
                                 <TableRow key={project._id}>
-                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{project.projectId}</TableCell>
 
                                     <TableCell className="font-medium">
                                         {project.title}
