@@ -10,7 +10,6 @@ import { useStats } from "@/hooks/useStats"
 import { ApiResponse } from "@/types/project"
 import { Task } from "@/types/task"
 import { CheckCircle2, Clock3, ListTodo, CircleX, CircleDashed } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { toTask } from "@/lib/mappers/task"
 import { TaskRow } from "@/components/tasks/task-row"
 
