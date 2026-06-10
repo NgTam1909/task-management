@@ -35,18 +35,26 @@ export function UserManagement() {
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [limit, setPageSize] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const fetchUsers = async (
-        keyword = ""
+        keyword = "", pageNumber = 1
     ) => {
         try {
             setLoading(true);
 
             const data =
                 await adminService.getUsers(
-                    keyword
+                    keyword,
+                    pageNumber,
                 );
 
             setUsers(data.data ?? []);
+            setTotalPages(data.pagination.totalPages);
+            setPageSize(data.limit);
+            setPage(pageNumber);
+
         } finally {
             setLoading(false);
         }
@@ -108,7 +116,7 @@ export function UserManagement() {
                             ) : (
                                 users?.map((user, index) => (
                                     <TableRow key={user._id}>
-                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{(page - 1) * limit + index + 1}</TableCell>
 
                                         <TableCell>
                                             {user.lastName}
@@ -160,6 +168,17 @@ export function UserManagement() {
                                 )}
                         </TableBody>
                 </Table>
+                <div className="flex items-center justify-between mt-4">
+                    <div className="text-sm text-muted-foreground">Trang {page} / {totalPages}</div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => fetchUsers(search, page - 1)}>
+                            Trước
+                        </Button>
+                        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => fetchUsers(search, page + 1)}>
+                            Sau
+                        </Button>
+                    </div>
+                </div>
             </CardContent>
         </Card>
     );

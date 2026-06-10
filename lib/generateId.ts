@@ -16,5 +16,5 @@ export async function generateProjectId() {
         }
     )
 
-    return `PRJ${String(counter.seq).padStart(2, "0")}`
+    return `PRJ${String(counter.seq).padStart(3, "0")}`
 }

@@ -11,13 +11,14 @@ export const adminService = {
         return res.json();
     },
 
-    async getUsers(search = "") {
+    async getUsers(search = "", page = 1) {
         const params = new URLSearchParams();
-
+        const limit = 7;
         if (search) {
             params.append("search", search);
         }
-
+        params.append("page", page.toString());
+        params.append("limit",  limit.toString());
         const res = await fetch(
             `/api/admin/user?${params.toString()}`
         );
@@ -27,8 +28,11 @@ export const adminService = {
                 "Không thể lấy danh sách người dùng"
             );
         }
-
-        return res.json();
+        const data = await res.json();
+        return {
+            ...data,
+            limit: limit
+        };
     },
 
     async getProjects(search = "", page = 1) {

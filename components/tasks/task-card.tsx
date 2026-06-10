@@ -69,8 +69,14 @@ function TaskCardContent({ task, draggable, onDragStart, onDragEnd }: Props) {
                                     </Badge>
                                 )}
                             </div>
-
                             <div className="flex items-center gap-2">
+                                {task.startDate && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Calendar size={14} />
+                                        {task.startDate}
+                                    </div>
+                                )}
+
                                 {task.dueDate && (
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                         <Calendar size={14} />
