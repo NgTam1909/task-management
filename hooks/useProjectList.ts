@@ -37,7 +37,23 @@ export function useProjectList() {
     const loadProjects = async () => {
         try {
             const data = await getProjectsService()
-            setProjects(data)
+            const rolePriority = {
+                Admin: 3,
+                Leader: 2,
+                Member: 1,
+            }
+
+            const sorted = [...data].sort(
+                (a, b) =>
+                    rolePriority[
+                        b.currentUserRole as keyof typeof rolePriority
+                        ] -
+                    rolePriority[
+                        a.currentUserRole as keyof typeof rolePriority
+                        ]
+            )
+
+            setProjects(sorted)
         } finally {
             setLoading(false)
         }

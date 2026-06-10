@@ -7,9 +7,6 @@ import { createProjectSchema } from "@/lib/validations/project.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
 import {generateProjectId} from "@/lib/generateId";
-
-
-
 export async function GET(req: NextRequest) {
     try {
         const userId = await getUserIdFromRequest(req)
@@ -23,7 +20,7 @@ export async function GET(req: NextRequest) {
             isActive: true,
             $or: [{ "owner.userId": userId }, { "members.userId": userId }],
         })
-            .select("title projectId isPublic createdAt startDate endDate")
+            .select("title projectId isPublic createdAt startDate endDate owner members")
             .sort({ createdAt: -1 })
 
         for (const project of projects) {
@@ -33,7 +30,54 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        return NextResponse.json(projects)
+        const rolePriority = {
+            [ProjectRole.ADMIN]: 3,
+            [ProjectRole.LEADER]: 2,
+            [ProjectRole.MEMBER]: 1,
+        }
+
+        const result = projects.map((project: any) => {
+            const isOwner =
+                project.owner?.userId?.toString() === userId
+
+            let currentUserRole: ProjectRole =
+                ProjectRole.MEMBER
+
+            if (isOwner) {
+                currentUserRole = project.owner.role
+            } else {
+                const member = project.members?.find(
+                    (m: any) =>
+                        m.userId?.toString() === userId
+                )
+
+                if (member) {
+                    currentUserRole = member.role
+                }
+            }
+
+            return {
+                _id: project._id,
+                title: project.title,
+                projectId: project.projectId,
+                description: project.description ?? "",
+                isPublic: project.isPublic,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                createdAt: project.createdAt,
+
+                isOwner,
+                currentUserRole,
+            }
+        })
+
+        result.sort(
+            (a, b) =>
+                rolePriority[b.currentUserRole] -
+                rolePriority[a.currentUserRole]
+        )
+
+        return NextResponse.json(result)
     } catch {
         return NextResponse.json(
             { message: "Không thể lấy danh sách dự án" },
@@ -110,6 +154,7 @@ export async function POST(req: NextRequest) {
             {
                 _id: project._id,
                 title: project.title,
+                description: project.description,
                 projectId: project.projectId,
                 startDate: project.startDate ? project.startDate.toISOString().split('T')[0] : "",
                 endDate: project.endDate ? project.endDate.toISOString().split('T')[0] : "",

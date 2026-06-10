@@ -7,6 +7,7 @@ import {
     BookUser,
     Plus,
     SquareKanban,
+    FolderKey, Crown,
 } from "lucide-react"
 
 import {
@@ -48,7 +49,37 @@ export default function ProjectList({
                                         onOpenTask,
                                     }: Props) {
     const hasProjects = projects.length > 0
+    const RoleIcon = ({
+                          role,
+                      }: {
+        role: string
+    }) => {
+        switch (role) {
+            case "Admin":
+                return (
+                    <Crown
+                        size={14}
+                        className="text-yellow-500"
+                    />
+                )
 
+            case "Leader":
+                return (
+                    <FolderKey
+                        size={14}
+                        className="text-blue-500"
+                    />
+                )
+
+            default:
+                return (
+                    <Folder
+                        size={14}
+                        className="text-muted-foreground"
+                    />
+                )
+        }
+    }
     return (
         <SidebarMenu>
             {loading && (
@@ -68,9 +99,9 @@ export default function ProjectList({
                     <div className="flex items-center justify-between">
                         <CollapsibleTrigger asChild>
                             <button className="flex-1 min-w-0 flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition text-left">
-                                <Folder size={18} className="flex-shrink-0" />
+                                <RoleIcon role={project.currentUserRole} />
                                 <span className="flex-1 truncate">{project.title}</span>
-                                <ChevronDown size={16} className="flex-shrink-0" />
+                                <ChevronDown size={16} className="shrink-0" />
                             </button>
                         </CollapsibleTrigger>
 
