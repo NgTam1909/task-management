@@ -93,7 +93,7 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
                                 </Button>
                             </DropdownMenuTrigger>
 
-                            <DropdownMenuContent align="end" className="w-[500px] p-3">
+                            <DropdownMenuContent align="end" className="w-125 p-3">
                                 <p className="mb-2 text-sm font-medium">
                                     Hướng dẫn sử dụng trạng thái công việc:
                                 </p>

@@ -28,7 +28,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {Project} from "@/types/project";
-
+import { usePathname } from "next/navigation"
 type Props = {
     loading: boolean
     projects: Project[]
@@ -48,6 +48,7 @@ export default function ProjectList({
                                         onOpenSettings,
                                         onOpenTask,
                                     }: Props) {
+    const pathname = usePathname()
     const hasProjects = projects.length > 0
     const RoleIcon = ({
                           role,
@@ -80,6 +81,11 @@ export default function ProjectList({
                 )
         }
     }
+    const isProjectActive = (projectId: string) => {
+        return pathname.startsWith(
+            `/project/${projectId}`
+        )
+    }
     return (
         <SidebarMenu>
             {loading && (
@@ -95,10 +101,20 @@ export default function ProjectList({
             )}
 
             {projects.map((project) => (
-                <Collapsible key={project._id}>
+                <Collapsible
+                    key={project._id}
+                    defaultOpen={isProjectActive(project.projectId)}
+                >
                     <div className="flex items-center justify-between">
                         <CollapsibleTrigger asChild>
-                            <button className="flex-1 min-w-0 flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition text-left">
+                            <button
+                                className={`
+                                flex-1 min-w-0 flex items-center gap-2 p-2 rounded-lg transition text-left
+                                ${
+                                    isProjectActive(project.projectId)
+                                        ? "bg-blue-100 dark:bg-blue-950 border border-blue-300"
+                                        : "hover:bg-muted"
+                                }`}>
                                 <RoleIcon role={project.currentUserRole} />
                                 <span className="flex-1 truncate">{project.title}</span>
                                 <ChevronDown size={16} className="shrink-0" />
@@ -139,8 +155,12 @@ export default function ProjectList({
                         <div className="flex items-center gap-1">
                             <Link
                                 href={`/project/${project.projectId}/tasks`}
-                                className="flex flex-1 items-center gap-2 p-2 rounded-lg hover:bg-muted transition text-sm"
-                            >
+                                className={`flex flex-1 items-center gap-2 p-2 rounded-lg transition text-sm
+                                    ${
+                                    pathname === `/project/${project.projectId}/tasks`
+                                        ? "bg-muted font-semibold"
+                                        : "hover:bg-muted"
+                                }`}>
                                 <SquareKanban size={16} />
                                 Tasks
                             </Link>
