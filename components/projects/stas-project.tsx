@@ -19,7 +19,6 @@ type Props = {
 }
 
 export default function AdvancedDashboard({ projectId }: Props) {
-    const router = useRouter()
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)

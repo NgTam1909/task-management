@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        let currentRole: ProjectRole | null = null
+        let currentRole: ProjectRole | null 
         if (project.owner?.userId?.toString() === userId) {
             currentRole = project.owner.role
         } else {

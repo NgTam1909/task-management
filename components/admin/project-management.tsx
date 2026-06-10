@@ -64,7 +64,6 @@ export function ProjectManagement() {
             await adminService.restoreProject(
                 id
             );
-
             fetchProjects(search);
         } catch (error) {
             console.error(error);
