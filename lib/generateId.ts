@@ -18,3 +18,25 @@ export async function generateProjectId() {
 
     return `PRJ${String(counter.seq).padStart(3, "0")}`
 }
+export async function generateTaskCode(
+    projectId: string
+) {
+    const counter = await Counter.findOneAndUpdate(
+        {
+            name: `task_${projectId}`,
+        },
+        {
+            $inc: {
+                seq: 1,
+            },
+        },
+        {
+            new: true,
+            upsert: true,
+        }
+    )
+
+    return `${projectId}-TSK${String(
+        counter.seq
+    ).padStart(3, "0")}`
+}

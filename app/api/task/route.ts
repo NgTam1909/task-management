@@ -8,12 +8,7 @@ import { createTaskSchema } from "@/lib/validations/task.validation"
 import ActivityLog, { ActivityAction } from "@/models/activityLog.model"
 import {getUserIdFromRequest} from "@/lib/jwt";
 import {TaskStatus} from "@/types/task";
-
-function generateTaskCode(id: string) {
-    const suffix = id.slice(-6).toUpperCase()
-    return `${suffix}`
-}
-
+import {generateTaskCode} from "@/lib/generateId";
 export async function POST(req: NextRequest) {
     try {
         const userId = await getUserIdFromRequest(req)
@@ -133,23 +128,22 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // TẠO TASK (CHƯA CÓ CODE)
+        const taskCode = await generateTaskCode(
+            project.projectId
+        )
         const task = new Task({
             ...data,
+            code: taskCode,
             projectId: project._id,
             creatorId: new mongoose.Types.ObjectId(userId),
-            assignees: requestedAssignees.map((id) => new mongoose.Types.ObjectId(id)),
+            assignees: requestedAssignees.map(
+                (id) => new mongoose.Types.ObjectId(id)
+            ),
             parentId: parentTask?._id,
             overDue: false,
         })
-        await task.save()
 
-        // THÊM PHẦN TẠO CODE TỪ _ID VÀ CẬP NHẬT
-        if (!task.code) {
-            const code = generateTaskCode(task._id.toString())
-            task.code = code
-            await task.save()
-        }
+        await task.save()
 
         try {
             await ActivityLog.create({
