@@ -48,7 +48,6 @@ export function ProjectManagement() {
                 );
 
             setProjects(data.data ?? []);
-            console.log("Tổng số trang từ API:", data.pagination.totalPages);
             setTotalPages(data.pagination.totalPages);
             setPage(pageNumber);
         } finally {
@@ -70,6 +69,39 @@ export function ProjectManagement() {
         } catch (error) {
             console.error(error);
         }
+    };
+    const formatDateRange = (
+        startDate: string | Date,
+        endDate: string | Date
+    ) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const sameYear =
+            start.getFullYear() === end.getFullYear();
+
+        const sameMonth =
+            sameYear &&
+            start.getMonth() === end.getMonth();
+
+        if (sameMonth) {
+            return `${start.getDate()} - ${end.getDate()}/${String(
+                end.getMonth() + 1
+            ).padStart(2, "0")}/${end.getFullYear()}`;
+        }
+        if (sameYear) {
+            return `${start.toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+            })} → ${end.toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+            })}`;
+        }
+        return `${start.toLocaleDateString(
+            "vi-VN"
+        )} → ${end.toLocaleDateString("vi-VN")}`;
     };
     return (
         <Card>
@@ -108,6 +140,7 @@ export function ProjectManagement() {
                             <TableHead>Mã dự án</TableHead>
                             <TableHead>Tên dự án</TableHead>
                             <TableHead>Chủ dự án</TableHead>
+                            <TableHead>Thời gian hoạt động</TableHead>
                             <TableHead className="text-center">Task</TableHead>
                             <TableHead>Thành viên</TableHead>
                             <TableHead className="text-center">Loại</TableHead>
@@ -136,6 +169,13 @@ export function ProjectManagement() {
 
                                     <TableCell>
                                         {project.owner}
+                                    </TableCell>
+                                    <TableCell>
+                                        {formatDateRange(
+                                            project.startDate,
+                                            project.endDate
+                                        )}
+
                                     </TableCell>
 
                                     <TableCell className="text-center">

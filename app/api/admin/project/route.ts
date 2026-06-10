@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
                     project.owner?.userId
                         ? `${project.owner.userId.lastName} ${project.owner.userId.firstName}`
                         : "Không xác định",
-
+                startDate: project.startDate,
+                endDate: project.endDate,
                 taskCount,
                 memberCount:
                     project.members?.length ?? 0,

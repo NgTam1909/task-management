@@ -22,6 +22,8 @@ export interface AdminProject {
     createdAt: string;
     isPublic: boolean;
     owner: string;
+    startDate: string;
+    endDate: string;
     members: unknown[];
     taskCount: number;
     memberCount: number;
