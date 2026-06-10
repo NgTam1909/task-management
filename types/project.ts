@@ -7,6 +7,9 @@ export enum ProjectRole {
 export type ProjectInfo = {
     title: string;
     projectId: string;
+    startDate: string;
+    endDate: string;
+    description: string;
 };
 
 export type ApiTask = {
@@ -47,6 +50,7 @@ export type Project = {
     title: string
     projectId: string
     isPublic: boolean
+    currentUserRole: "Admin" | "Leader" | "Member"
 }
 export type InviteInfo = {
     projectTitle: string;

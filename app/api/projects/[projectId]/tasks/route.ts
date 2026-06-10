@@ -51,6 +51,9 @@ export async function GET(
             project: {
                 title: project.title,
                 projectId: project.projectId,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                description: project.description
             },
             tasks: tasks.map((task) => task.toObject()),
         })

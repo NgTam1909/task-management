@@ -21,7 +21,6 @@ const statusColumns: Array<{ title: string; status: TaskStatus }> = [
 export default function ProjectTaskListPage() {
     const params = useParams<{ projectId: string }>()
     const projectId = params?.projectId
-
     const [project, setProject] = useState<ProjectInfo | null>(null)
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
@@ -165,7 +164,15 @@ export default function ProjectTaskListPage() {
             <section className="space-y-2">
                 <h1 className="text-xl font-semibold">{project?.title ?? "Danh sách công việc"}</h1>
                 {project?.projectId && (
-                    <p className="text-sm text-muted-foreground">{project.projectId}</p>
+                    <span className="text-sm text-muted-foreground">{project.projectId}</span>
+                )} -
+                {project?.description && (
+                    <span className="text-sm text-muted-foreground"> {project.description}</span>
+                )}
+                {project?.startDate && project?.endDate &&  (
+                    <p className="text-sm text-muted-foreground">
+                       {new Date(project.startDate).toLocaleDateString("vi-VN")} →
+                         {new Date(project.endDate).toLocaleDateString("vi-VN")}</p>
                 )}
                 {loading && <p className="text-sm text-muted-foreground">Đang tải tasks...</p>}
                 {!loading && tasks.length === 0 && (
