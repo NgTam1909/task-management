@@ -24,7 +24,7 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
             task.status !== "backlog" &&
             task.status !== "cancelled"
     );
-    const { assigneeGroups, dateRange, dayColumns } = useMemo(() => {
+    const { assigneeGroups, dayColumns } = useMemo(() => {
         if (!tasks || tasks.length === 0) {
             return { assigneeGroups: [], dateRange: { start: new Date(), end: new Date() }, dayColumns: [] };
         }
