@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
         await dbConnect()
 
         const docs = await TaskModel.find(query)
-            .select("code title status priority dueDate startedAt completedAt projectId assignees creatorId createdAt updatedAt")
+            .select("code title status priority startDate dueDate startedAt completedAt projectId assignees creatorId createdAt updatedAt")
             .sort({ dueDate: 1, createdAt: -1 })
             .lean()
 
@@ -133,14 +133,20 @@ export async function GET(req: NextRequest) {
             const title = typeof record.title === "string" ? record.title : ""
             const status = record.status
             const priority = record.priority
-            const dueDateRaw = record.dueDate
-            const dueDate =
-                dueDateRaw instanceof Date
-                    ? dueDateRaw.toISOString()
-                    : typeof dueDateRaw === "string"
-                      ? dueDateRaw
+            const startDateRaw = record.startDate
+            const startDate =
+                startDateRaw instanceof Date
+                    ? startDateRaw.toISOString()
+                    : typeof startDateRaw === "string"
+                      ? startDateRaw
                       : undefined
-
+                const dueDateRaw = record.dueDate
+                const dueDate =
+                    dueDateRaw instanceof Date
+                        ? dueDateRaw.toISOString()
+                        : typeof dueDateRaw === "string"
+                            ? dueDateRaw
+                            : undefined
             const projectObjectId = record.projectId ? String(record.projectId) : ""
             const projectId = projectObjectId ? projectIdMap.get(projectObjectId) : undefined
             if (!projectId) {
@@ -162,6 +168,7 @@ export async function GET(req: NextRequest) {
                 title,
                 status,
                 priority,
+                startDate,
                 dueDate,
                 projectId,
                 assigneeIds,

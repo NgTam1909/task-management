@@ -5,6 +5,8 @@ import { Task, PriorityLevel, TaskStatus } from '@/types/task'
 import { getTaskOverDue} from "@/lib/overDue"
 type Props = {
     task: Task
+    extraContent?: React.ReactNode
+    hasExtraColumn?: boolean
 }
 
 function formatDateDDMMYYYY(dateStr?: string) {
@@ -20,7 +22,32 @@ function formatDateDDMMYYYY(dateStr?: string) {
 
     return `${dd}/${mm}/${yyyy}`
 }
+function formatDateTime(dateStr?: string | Date | null) {
+    if (!dateStr) return "--"
 
+    const d = new Date(dateStr)
+
+    if (Number.isNaN(d.getTime())) return "--"
+
+    return d.toLocaleString("vi-VN")
+}
+function getElapsedTime(startedAt?: string | Date | null) {
+    if (!startedAt) return ""
+    const start = new Date(startedAt)
+    if (Number.isNaN(start.getTime())) return ""
+    const diffMs = Date.now() - start.getTime()
+    const totalMinutes = Math.floor(diffMs / (1000 * 60))
+    const totalHours = Math.floor(totalMinutes / 60)
+    const totalDays = Math.floor(totalHours / 24)
+
+    if (totalDays > 0) {
+        return `${totalDays} ngày ${totalHours % 24} giờ`
+    }
+    if (totalHours > 0) {
+        return `${totalHours} giờ ${totalMinutes % 60} phút`
+    }
+    return `${totalMinutes} phút`
+}
 function priorityPill(priority?: string | null) {
     const normalized = String(priority ?? '').toLowerCase()
 
@@ -53,34 +80,28 @@ function priorityPill(priority?: string | null) {
 
 function statusLabel(status: TaskStatus) {
     switch (status) {
-        case TaskStatus.TODO:
-            return 'To do'
-
-        case TaskStatus.IN_PROGRESS:
-            return 'In progress'
-
-        case TaskStatus.PENDING_REVIEW:
-            return 'Pending review'
-
-        case TaskStatus.DONE:
-            return 'Done'
-
-        case TaskStatus.CANCELLED:
-            return 'Cancelled'
-
-        case TaskStatus.BACKLOG:
-            return 'Backlog'
-
-        default:
-            return String(status)
+        case TaskStatus.TODO: return 'To do'
+        case TaskStatus.IN_PROGRESS: return 'In progress'
+        case TaskStatus.PENDING_REVIEW: return 'Pending review'
+        case TaskStatus.DONE: return 'Done'
+        case TaskStatus.CANCELLED: return 'Cancelled'
+        case TaskStatus.BACKLOG: return 'Backlog'
+        default: return String(status)
     }
 }
 
-export function TaskRow({ task }: Props) {
+export function TaskRow({
+                            task,
+                            extraContent,
+                            hasExtraColumn = false,
+                        }: Props) {
     const router = useRouter()
     const pill = priorityPill(task.priority)
     const code = (task.code ?? task.id ?? '').toString()
+    const start = formatDateDDMMYYYY(task.startDate)
     const due = formatDateDDMMYYYY(task.dueDate)
+    const elapsedTime = getElapsedTime(task.startedAt)
+    const completedAt = formatDateTime(task.completedAt)
     const { isWarning, label } = getTaskOverDue(task)
 
     function goDetail() {
@@ -100,8 +121,8 @@ export function TaskRow({ task }: Props) {
                 }
             }}
             className={cn(
-                "border  border-black rounded-lg cursor-pointer hover:bg-black/[0.03] ",
-                isWarning && "outline outline-2 outline-red-600"
+                "border  border-black rounded-lg cursor-pointer hover:bg-black/3 ",
+                isWarning && "outline outline-red-600"
             )}
         >
             {/* MOBILE CARD - chỉ hiện trên sm trở xuống */}
@@ -114,9 +135,12 @@ export function TaskRow({ task }: Props) {
 
                             <div className="text-sm">
                                 <span className="font-semibold">Thời hạn:</span>{" "}
+                                {task.startDate
+                                ? new Date(task.startDate).toLocaleDateString()
+                                : "N/A"}-
                                 {task.dueDate
                                     ? new Date(task.dueDate).toLocaleDateString()
-                                    : "Không có"}
+                                    : "N/A"}
                             </div>
 
                             <div className="text-sm">
@@ -132,23 +156,40 @@ export function TaskRow({ task }: Props) {
                                 {label}
                             </span>
                                 )}
+                                {task.status === TaskStatus.DONE && task.completedAt && (
+                                    <div className="text-sm text-right text-green-600">
+                                        {completedAt}
+                                    </div>
+                                )}
+                                {task.status === TaskStatus.IN_PROGRESS && task.startedAt && (
+                                <div className="text-sm text-right text-green-600">
+                                    {elapsedTime}
+                                </div>
+                            )}
                             </div>
             </div>
             {/* DESKTOP ROW - chỉ hiện trên sm trở lên */}
 
-            <div className="hidden xl:grid grid-cols-[140px_1fr_100px_150px_160px]">
-                <div className="px-5 py-4 text-sm font-semibold">{code}</div>
-                <div className="px-5 py-4 text-sm font-semibold truncate">{task.title}</div>
-                <div className="px-5 py-4 text-sm">{due}</div>
-                <div className="px-5 py-4">
+            <div
+                className={cn(
+                    "hidden xl:grid items-center",
+                    hasExtraColumn
+                        ? "grid-cols-[120px_1fr_120px_150px_150px_180px]"
+                        : "grid-cols-[120px_1fr_120px_150px_150px]"
+                )}
+            >
+                <div className="px-5 py-4 text-sm font-semibold text-center">{code}</div>
+                <div className="px-5 py-4 text-sm font-semibold truncate ">{task.title}</div>
+                <div className=" py-4 text-sm">{start}<br/>→{due}</div>
+                <div className="px-5 py-4 text-center">
                     <span className={cn(
-                        "inline-flex w-[120px] justify-center rounded-full border px-6 py-1 text-sm font-bold",
+                        "inline-flex w-30 justify-center rounded-full border px-6 py-1 text-sm font-bold text-center",
                         pill.className
                     )}>
                         {pill.label}
                     </span>
                 </div>
-                <div className="px-5 py-4 text-sm">
+                <div className="px-5 py-4 text-sm text-center">
                     <div className="flex items-center gap-2">
                         <span>{statusLabel(task.status)}</span>
                         {isWarning && (
@@ -157,7 +198,18 @@ export function TaskRow({ task }: Props) {
                             </span>
                         )}
                     </div>
+                    {task.status === TaskStatus.DONE &&
+                        task.completedAt && (
+                            <span className="text-xs text-right text-green-600">
+                                {completedAt}</span>
+                            )}
+                    {task.status === TaskStatus.IN_PROGRESS &&
+                        task.startedAt && (
+                            <span className="text-xs text-right text-green-600">
+                                {elapsedTime}</span>
+                        )}
                 </div>
+                {extraContent}
             </div>
         </div>
     )

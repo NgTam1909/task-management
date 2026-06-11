@@ -201,6 +201,14 @@ export default function AdvancedDashboard({ projectId }: Props) {
                 </CardHeader>
 
                 <CardContent className="space-y-3">
+                    <div className="hidden xl:grid grid-cols-[120px_1fr_120px_150px_150px_180px] gap-2 border bg-white sticky top-0 z-10">
+                        <div className="px-4 py-2 text-sm text-center font-semibold">Mã công việc</div>
+                        <div className="px-4 py-2 text-sm text-center font-semibold">Tiêu đề</div>
+                        <div className="px-4 py-2 text-sm text-center font-semibold">Thời gian</div>
+                        <div className="px-4 py-2 text-sm text-center font-semibold">Ưu tiên</div>
+                        <div className="px-4 py-2 text-sm text-center font-semibold">Trạng thái</div>
+                        <div className="px-4 py-2 text-sm text-center font-semibold">Người thực hiện</div>
+                    </div>
                     {loading && (
                         <p className="text-sm text-muted-foreground">
                             Đang tải dữ liệu...
@@ -220,7 +228,16 @@ export default function AdvancedDashboard({ projectId }: Props) {
                     {!loading &&
                         !error &&
                         filteredTasks.map((task) => (
-                            <TaskRow key={task.id} task={task} />
+                            <TaskRow
+                                key={task.id}
+                                task={task}
+                                hasExtraColumn
+                                extraContent={
+                                    <div className="text-center">
+                                        {task.assignees}
+                                    </div>
+                                }
+                            />
                         ))}
                 </CardContent>
             </Card>

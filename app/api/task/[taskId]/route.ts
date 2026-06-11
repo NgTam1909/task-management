@@ -65,7 +65,24 @@ export async function PATCH(
         if (!task) {
             return NextResponse.json({message: "Không tìm thấy task"}, {status: 404})
         }
+        const data = parsed.data
+        if (task.status === TaskStatus.DONE) {
+            const onlyStatusUpdate =
+                data.status !== undefined &&
+                Object.keys(data).every(
+                    (key) => key === "status"
+                )
 
+            if (!onlyStatusUpdate) {
+                return NextResponse.json(
+                    {
+                        message:
+                            "Task đã hoàn thành, không thể chỉnh sửa nội dung."
+                    },
+                    { status: 400 }
+                )
+            }
+        }
         const project = await Project.findById(task.projectId)
         if (!project) {
             return NextResponse.json({message: "Không tìm thấy dự án"}, {status: 404})
@@ -82,8 +99,6 @@ export async function PATCH(
         if (!currentRole) {
             return NextResponse.json({message: "Forbidden"}, {status: 403})
         }
-
-        const data = parsed.data
         // Member chỉ được thao tác task của mình
         if (currentRole === ProjectRole.MEMBER) {
             const isCreator =
@@ -201,8 +216,16 @@ export async function PATCH(
             }
 
             // Cập nhật các mốc thời gian (startedAt)
-            if (nextStatus === TaskStatus.IN_PROGRESS) updateData.startedAt = new Date();
+            if (currentStatus !== TaskStatus.IN_PROGRESS &&
+                nextStatus === TaskStatus.IN_PROGRESS
+            ) updateData.startedAt = new Date();
             if (nextStatus !== TaskStatus.IN_PROGRESS && task.startedAt) updateData.startedAt = null;
+
+            // Cập nhật các mốc thời gian (completedAt)
+            if (currentStatus !== TaskStatus.DONE &&
+                nextStatus === TaskStatus.DONE
+            ) updateData.completedAt = new Date();
+            if ( currentStatus === TaskStatus.DONE && task.completedAt)updateData.completedAt = null;
 
             updateData.status = nextStatus;
         }

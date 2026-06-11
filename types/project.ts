@@ -14,6 +14,7 @@ export type ProjectInfo = {
 
 export type ApiTask = {
     _id: string;
+    code: string;
     parentId?: string;
     title: string;
     status: TaskStatus;
@@ -21,6 +22,8 @@ export type ApiTask = {
     priority?: "none" | "low" | "medium" | "high";
     dueDate?: string | null;
     startDate?: string | null;
+    startedAt: string | null;
+    completedAt: string | null;
     estimate?: number | null;
     creatorId: string;
     assignees?: Array<{

@@ -2,7 +2,6 @@ import {ApiTask} from "@/types/project";
 import {Task, TaskStatus} from "@/types/task";
 
 export function toTask(item: ApiTask, projectId?: string): Task {
-    const code = `TSK-${item._id.slice(-6).toUpperCase()}`
     const priority =
         item.priority === "low" ||
         item.priority === "medium" ||
@@ -22,7 +21,7 @@ export function toTask(item: ApiTask, projectId?: string): Task {
         id: item._id,
         projectId,
         parentId: item.parentId ?? undefined,
-        code,
+        code: item.code,
         title: item.title,
         status: item.status as TaskStatus,
         priority,
@@ -30,8 +29,13 @@ export function toTask(item: ApiTask, projectId?: string): Task {
         creatorId: item.creatorId ?? undefined,
         assignees,
         labels: item.labels,
+
         startDate: item.startDate ?? undefined,
         dueDate: item.dueDate ?? undefined,
+
+        startedAt: item.startedAt ?? undefined,
+        completedAt: item.completedAt ?? undefined,
+
         estimate: item.estimate ?? undefined,
         createdAt: item.createdAt ?? undefined,
         updatedAt: item.updatedAt ?? undefined,

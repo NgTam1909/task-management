@@ -30,6 +30,7 @@ export interface Task {
     priority?: "low" | "medium" | "high";
     startDate?: string;
     dueDate?: string;
+    startedAt?: string;
     completedAt?: string;
     startDateValue?: string;
     dueDateValue?: string;

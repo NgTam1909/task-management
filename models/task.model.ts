@@ -25,6 +25,7 @@ export interface ITask extends Document {
     dueDate?: Date;
     estimate?: number;
     startedAt?: Date;
+    completedAt?:Date;
     parentId?: mongoose.Types.ObjectId;
     comments?: ITaskComment[];
     resource?: mongoose.Types.ObjectId[];
@@ -94,6 +95,9 @@ const TaskSchema = new Schema<ITask>(
         },
 
         dueDate: {
+            type: Date,
+        },
+        completedAt: {
             type: Date,
         },
 

@@ -137,12 +137,12 @@ export function MyTasks() {
       <section className="w-full py-2">
         <div className="w-full p-3">
           {/* Header */}
-          <div className="hidden xl:grid grid-cols-[140px_1fr_100px_150px_160px] gap-2 border bg-white sticky top-0 z-10">
-            <div className="px-4 py-2 text-sm text-center font-semibold">Mã</div>
-            <div className="px-4 py-2 text-sm text-center font-semibold">Nội dung</div>
+          <div className="hidden xl:grid grid-cols-[120px_1fr_120px_150px_150px] gap-2 border bg-white sticky top-0 z-10">
+            <div className="px-4 py-2 text-sm text-center font-semibold">Mã công việc</div>
+            <div className="px-4 py-2 text-sm text-center font-semibold">Tiêu đề</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Thời gian</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Ưu tiên</div>
-            <div className="px-4 py-2 text-sm font-semibold">Trạng thái</div>
+            <div className="px-4 py-2 text-sm text-center font-semibold">Trạng thái</div>
           </div>
 
           {/* Nội dung scroll */}
@@ -156,7 +156,7 @@ export function MyTasks() {
                   Không có công việc nào
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4 p-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4 p-2 ">
                   {sortedTasks.map((task) => (
                       <TaskRow key={task.id} task={task} />
                   ))}
