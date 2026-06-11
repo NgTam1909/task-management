@@ -12,7 +12,7 @@ import { Task } from "@/types/task"
 import { CheckCircle2, Clock3, ListTodo, CircleX, CircleDashed } from "lucide-react"
 import { toTask } from "@/lib/mappers/task"
 import { TaskRow } from "@/components/tasks/task-row"
-
+import GanttChart from "@/components/chart/gant-chart";
 type Props = {
     projectId: string
 }
@@ -88,7 +88,10 @@ export default function AdvancedDashboard({ projectId }: Props) {
                     :listFilter.kind === "review"
                         ? "review"
                         : listFilter.status
-
+    const tasksWithAssigneeSorted = [...tasks].sort((a, b) => {
+        // Giả sử task có thuộc tính assignee hoặc list assignees
+        return (b.assignees?.length || 0) - (a.assignees?.length || 0);
+    });
     return (
         <div className="space-y-6">
             {/* STATS */}
@@ -172,7 +175,15 @@ export default function AdvancedDashboard({ projectId }: Props) {
                     </CardContent>
                 </Card>
             </div>
-
+            {/* Thêm phần Gantt Chart mới */}
+            <Card className="rounded-2xl">
+                <CardHeader>
+                    <CardTitle>Biểu đồ tiến độ (Custom)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <GanttChart tasks={filteredTasks} />
+                </CardContent>
+            </Card>
             {/* FILTER */}
             {filterLabel && (
                 <div className="flex items-center justify-between rounded-xl border px-4 py-3 bg-muted/30">
