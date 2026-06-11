@@ -1,3 +1,4 @@
+//api/tasks/my-tasks
 import mongoose from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
@@ -9,10 +10,6 @@ function escapeRegex(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-function toShortTaskCode(id: string) {
-    const suffix = id.slice(-6).toUpperCase()
-    return `TSK-${suffix}`
-}
 
 function parseDateOnly(value: string) {
     // Accept YYYY-MM-DD or any Date.parse() compatible string; normalize to start of day.
@@ -95,7 +92,7 @@ export async function GET(req: NextRequest) {
         await dbConnect()
 
         const docs = await TaskModel.find(query)
-            .select("title status priority dueDate projectId assignees creatorId createdAt updatedAt")
+            .select("code title status priority dueDate startedAt completedAt projectId assignees creatorId createdAt updatedAt")
             .sort({ dueDate: 1, createdAt: -1 })
             .lean()
 
@@ -129,10 +126,13 @@ export async function GET(req: NextRequest) {
             const record = doc as unknown as Record<string, unknown>
 
             const id = String(record._id ?? "")
+                const code =
+                    typeof record.code === "string"
+                        ? record.code
+                        : ""
             const title = typeof record.title === "string" ? record.title : ""
             const status = record.status
             const priority = record.priority
-
             const dueDateRaw = record.dueDate
             const dueDate =
                 dueDateRaw instanceof Date
@@ -154,10 +154,11 @@ export async function GET(req: NextRequest) {
 
             const createdAtRaw = record.createdAt
             const updatedAtRaw = record.updatedAt
-
+                const startedAtRaw = record.startedAt
+                const completedAtRaw = record.completedAt
             return {
                 id,
-                code: toShortTaskCode(id),
+                code,
                 title,
                 status,
                 priority,
@@ -165,6 +166,19 @@ export async function GET(req: NextRequest) {
                 projectId,
                 assigneeIds,
                 assignees: assigneeIds,
+                startedAt:
+                    startedAtRaw instanceof Date
+                        ? startedAtRaw.toISOString()
+                        : typeof startedAtRaw === "string"
+                            ? startedAtRaw
+                            : undefined,
+
+                completedAt:
+                    completedAtRaw instanceof Date
+                        ? completedAtRaw.toISOString()
+                        : typeof completedAtRaw === "string"
+                            ? completedAtRaw
+                            : undefined,
                 createdAt:
                     createdAtRaw instanceof Date
                         ? createdAtRaw.toISOString()
