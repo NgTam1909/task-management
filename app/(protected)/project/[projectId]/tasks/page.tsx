@@ -129,9 +129,10 @@ export default function ProjectTaskListPage() {
         if (
             fromStatus === TaskStatus.BACKLOG &&
             status === TaskStatus.TODO &&
-            (!task.assigneeIds || task.assigneeIds.length === 0)
+            (!task.assigneeIds || task.assigneeIds.length === 0)||
+            !task.startDate || !task.dueDate
         ) {
-            window.alert("Cần gán assignee trước khi chuyển sang Todo.")
+            window.alert("Cập nhật đầy đủ thông tin trước khi giao việc")
             return
         }
 

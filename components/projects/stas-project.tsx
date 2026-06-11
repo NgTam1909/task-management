@@ -49,15 +49,26 @@ export default function AdvancedDashboard({ projectId }: Props) {
         loadTasks()
     }, [loadTasks])
 
-    // 👉 Lắng nghe các event refresh
+    // 👉 Lắng nghe các event refresh (cập nhật real-time)
     useEffect(() => {
         const handleTaskCreated = () => {
             loadTasks()
         }
+        const handleTaskUpdated = () => {
+            loadTasks()
+        }
+        const handleTaskDeleted = () => {
+            loadTasks()
+        }
+        
         window.addEventListener('task:created', handleTaskCreated)
+        window.addEventListener('task:updated', handleTaskUpdated)
+        window.addEventListener('task:deleted', handleTaskDeleted)
 
         return () => {
             window.removeEventListener('task:created', handleTaskCreated)
+            window.removeEventListener('task:updated', handleTaskUpdated)
+            window.removeEventListener('task:deleted', handleTaskDeleted)
         }
     }, [loadTasks])
 
