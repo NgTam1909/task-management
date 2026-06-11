@@ -99,10 +99,6 @@ export default function AdvancedDashboard({ projectId }: Props) {
                     :listFilter.kind === "review"
                         ? "review"
                         : listFilter.status
-    const tasksWithAssigneeSorted = [...tasks].sort((a, b) => {
-        // Giả sử task có thuộc tính assignee hoặc list assignees
-        return (b.assignees?.length || 0) - (a.assignees?.length || 0);
-    });
     return (
         <div className="space-y-6">
             {/* STATS */}
@@ -189,7 +185,7 @@ export default function AdvancedDashboard({ projectId }: Props) {
             {/* Thêm phần Gantt Chart mới */}
             <Card className="rounded-2xl">
                 <CardHeader>
-                    <CardTitle>Biểu đồ tiến độ (Custom)</CardTitle>
+                    <CardTitle>Biểu đồ tiến độ </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <GanttChart tasks={filteredTasks} />

@@ -4,24 +4,33 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Task } from "@/types/task";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+
+interface TaskLane {
+    tasks: Task[];
+}
 
 interface AssigneeGroup {
     assignee: string;
     taskCount: number;
-    tasks: Task[];
+    doneCount: number;
+    lanes: TaskLane[];
 }
 
 export default function GanttChart({ tasks }: { tasks: Task[] }) {
     const router = useRouter();
+    const visibleTasks = tasks.filter(
+        (task) =>
+            task.status !== "backlog" &&
+            task.status !== "cancelled"
+    );
     const { assigneeGroups, dateRange, dayColumns } = useMemo(() => {
         if (!tasks || tasks.length === 0) {
             return { assigneeGroups: [], dateRange: { start: new Date(), end: new Date() }, dayColumns: [] };
         }
-
         // Nhóm task theo assignees
         const groupMap = new Map<string, Task[]>();
-
-        tasks.forEach((task) => {
+        visibleTasks.forEach((task) => {
             if (task.assignees && task.assignees.length > 0) {
                 task.assignees.forEach((assignee) => {
                     if (!groupMap.has(assignee)) {
@@ -44,7 +53,7 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
         let maxDate = new Date();
         let hasValidDate = false;
 
-        tasks.forEach((task) => {
+        visibleTasks.forEach((task) => {
             if (task.startDate) {
                 const startDate = new Date(task.startDate);
                 if (startDate < minDate) minDate = startDate;
@@ -63,8 +72,8 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
             maxDate = new Date(minDate.getTime() + 14 * 24 * 60 * 60 * 1000);
         } else {
             // Thêm buffer trước và sau
-            minDate.setDate(minDate.getDate() - 2);
-            maxDate.setDate(maxDate.getDate() + 2);
+            minDate.setDate(minDate.getDate());
+            maxDate.setDate(maxDate.getDate() + 1);
         }
 
         // Tạo danh sách các ngày
@@ -72,19 +81,77 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
         for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
             dayColumns.push(new Date(d));
         }
+        //Tạo lane khi bị chồng thời gian task
+        function createLanes(tasks: Task[]): TaskLane[] {
+            const lanes: TaskLane[] = [];
 
+            const sortedTasks = [...tasks].sort((a, b) => {
+                const aStart = a.startDate
+                    ? new Date(a.startDate).getTime()
+                    : 0;
+
+                const bStart = b.startDate
+                    ? new Date(b.startDate).getTime()
+                    : 0;
+
+                return aStart - bStart;
+            });
+
+            sortedTasks.forEach((task) => {
+                const taskStart = task.startDate
+                    ? new Date(task.startDate).getTime()
+                    : 0;
+
+                let placed = false;
+
+                for (const lane of lanes) {
+                    const lastTask = lane.tasks[lane.tasks.length - 1];
+
+                    const lastEnd = lastTask.dueDate
+                        ? new Date(lastTask.dueDate).getTime()
+                        : 0;
+
+                    if (taskStart > lastEnd) {
+                        lane.tasks.push(task);
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (!placed) {
+                    lanes.push({
+                        tasks: [task],
+                    });
+                }
+            });
+
+            return lanes;
+        }
         // Sắp xếp theo số lượng task (giảm dần)
         const assigneeGroups: AssigneeGroup[] = Array.from(groupMap.entries())
-            .map(([assignee, tasks]) => ({
-                assignee,
-                taskCount: tasks.length,
-                tasks: tasks.sort((a, b) => {
-                    // Sắp xếp task: done cuối, inprogress đầu
-                    if (a.status === "done" && b.status !== "done") return 1;
-                    if (a.status !== "done" && b.status === "done") return -1;
-                    return 0;
-                }),
-            }))
+            .map(([assignee, tasks]) => {
+                const sortedTasks = [...tasks].sort((a, b) => {
+                    const aStart = a.startDate
+                        ? new Date(a.startDate).getTime()
+                        : 0;
+
+                    const bStart = b.startDate
+                        ? new Date(b.startDate).getTime()
+                        : 0;
+
+                    return aStart - bStart;
+                });
+                const doneCount = tasks.filter(
+                    (t) => t.status === "done"
+                ).length;
+
+                return {
+                    assignee,
+                    taskCount: tasks.length,
+                    doneCount,
+                    lanes: createLanes(sortedTasks),
+                };
+            })
             .sort((a, b) => b.taskCount - a.taskCount);
 
         return { assigneeGroups, dateRange: { start: minDate, end: maxDate }, dayColumns };
@@ -117,7 +184,22 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
 
         return { left, width };
     };
-
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case "todo":
+                return "Cần làm";
+            case "inprogress":
+                return "Đang thực hiện";
+            case "pending_review":
+                return "Chờ xét duyệt";
+            case "done":
+                return "Hoàn thành";
+            case "cancelled":
+                return "Đã hủy";
+            default:
+                return status;
+        }
+    };
     const getStatusColor = (status: string) => {
         switch (status) {
             case "done":
@@ -127,12 +209,11 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
             case "pending_review":
                 return "bg-yellow-500";
             case "cancelled":
-                return "bg-red-500";
+                return "bg-red-400";
             default:
-                return "bg-gray-400";
+                return "bg-gray-300";
         }
     };
-
     const formatDate = (date: Date) => {
         return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
     };
@@ -165,14 +246,6 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
                     <div key={group.assignee}>
                         {/* Assignee header row */}
                         <div className="flex border-b bg-blue-50 hover:bg-blue-100 transition-colors">
-                            <div className="w-48 flex-shrink-0 px-4 py-3 border-r font-semibold text-sm">
-                                <div className="flex items-center justify-between">
-                                    <span>{group.assignee}</span>
-                                    <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
-                                        {group.taskCount}
-                                    </span>
-                                </div>
-                            </div>
                             <div className="flex flex-1">
                                 {dayColumns.map((_, idx) => (
                                     <div
@@ -184,56 +257,143 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
                         </div>
 
                         {/* Task rows for this assignee */}
-                        {group.tasks.map((task) => {
-                            const { left, width } = getTaskPosition(task);
-                            return (
-                                <div key={task.id} className="flex border-b hover:bg-gray-50 transition-colors">
-                                    <div className="w-48 flex-shrink-0 px-4 py-3 border-r text-xs">
-                                        <div className="font-medium truncate">{task.code}</div>
-                                        <div className="text-gray-500 truncate">{task.title}</div>
-                                    </div>
-                                    <div className="flex-1 flex relative">
-                                        {dayColumns.map((_, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="w-16 flex-shrink-0 border-r relative h-16"
-                                            />
-                                        ))}
-
-                                        {/* Task bar - absolutely positioned */}
-                                        {width > 0 && (
-                                            <div
-                                                onClick={() => {
-                                                    if (task.projectId) {
-                                                        router.push(`/project/${task.projectId}/tasks?taskId=${task.id}`)
-                                                    }
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if ((e.key === 'Enter' || e.key === ' ') && task.projectId) {
-                                                        e.preventDefault()
-                                                        router.push(`/project/${task.projectId}/tasks?taskId=${task.id}`)
-                                                    }
-                                                }}
-                                                role="button"
-                                                tabIndex={0}
+                        {group.lanes.map((lane, laneIndex) => (
+                            <div
+                                key={laneIndex}
+                                className="flex border-b hover:bg-gray-50"
+                            >
+                                {/* chỉ hiển thị tên ở lane đầu tiên */}
+                                <div className="w-48 flex-shrink-0 border-r px-4 py-3">
+                                    {laneIndex === 0 ? (
+                                        <div className="font-medium">
+                                            {group.assignee}
+                                            <span
                                                 className={cn(
-                                                    "absolute h-12 rounded-md flex items-center px-2 text-xs text-white shadow-sm transition-all hover:shadow-lg hover:scale-105 top-2 bottom-2 cursor-pointer",
-                                                    getStatusColor(task.status),
-                                                    task.priority === "high" && "ring-2 ring-red-600"
+                                                    "ml-2 text-xs px-2 py-1 rounded-full text-white",
+                                                    group.doneCount === group.taskCount
+                                                        ? "bg-green-600"
+                                                        : "bg-blue-600"
                                                 )}
-                                                style={{
-                                                    left: `calc(${left}% + 4px)`,
-                                                    width: `calc(${width}% - 8px)`,
-                                                }}
-                                                title={`${task.title} (${task.status}) - Click để xem chi tiết`}
                                             >
-                                                <span className="truncate">{task.code}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                                {group.doneCount}/{group.taskCount}
+                                            </span>
+                                        </div>
+                                    ) : null}
                                 </div>
-                            );
-                        })}
+
+                                <div className="flex-1 flex relative">
+                                    {dayColumns.map((_, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="w-16 flex-shrink-0 border-r h-16"
+                                        />
+                                    ))}
+
+                                    {lane.tasks.map((task) => {
+                                        const { left, width } = getTaskPosition(task);
+
+                                        return (
+                                            <HoverCard key={task.id} openDelay={200}>
+                                                <HoverCardTrigger asChild>
+                                                    <div
+                                                        onClick={() => {
+                                                            if (task.projectId) {
+                                                                router.push(
+                                                                    `/project/${task.projectId}/tasks?taskId=${task.id}`
+                                                                );
+                                                            }
+                                                        }}
+                                                        className={cn(
+                                                            "absolute top-2 h-12 rounded-md px-2 flex items-center text-xs text-white cursor-pointer transition-all",
+                                                            "shadow-sm hover:shadow-lg hover:scale-[1.02]",
+                                                            getStatusColor(task.status),
+
+                                                            // ưu tiên
+                                                            task.priority === "high" &&
+                                                            "ring-2 ring-red-600 ring-offset-1",
+                                                            task.priority === "medium" &&
+                                                            "ring-2 ring-yellow-600 ring-offset-1",
+                                                            task.priority === "low" &&
+                                                            "ring-2 ring-gray-600 ring-offset-1"
+                                                        )}
+                                                        style={{
+                                                            left: `calc(${left}% + 4px)`,
+                                                            width: `calc(${width}% - 8px)`,
+                                                        }}
+                                                    >
+                                                        <span className="truncate">
+                                                            {task.code}
+                                                        </span>
+                                                    </div>
+                                                </HoverCardTrigger>
+
+                                                <HoverCardContent
+                                                    className="w-80"
+                                                    align="start"
+                                                    side="top"
+                                                >
+                                                    <div className="space-y-3">
+                                                        <div>
+                                                            <div className="font-semibold text-sm">
+                                                                {task.title}
+                                                            </div>
+
+                                                            <div className="text-xs text-muted-foreground">
+                                                                {task.code}
+                                                            </div>
+
+                                                            <div className="text-sm">
+                                                                <span>Mô tả:</span>
+                                                                {task.description}
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid gap-2 text-sm">
+                                                            <div className="flex justify-between">
+                                                                <span className="text-muted-foreground">
+                                                                    Trạng thái
+                                                                </span>
+                                                                <span>
+                                                                    {getStatusLabel(task.status)}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="flex justify-between">
+                                                                <span className="text-muted-foreground">
+                                                                    Ưu tiên
+                                                                </span>
+
+                                                                <span
+                                                                    className={cn(
+                                                                        "px-2 py-0.5 rounded text-xs text-white",
+                                                                        task.priority === "high" &&
+                                                                        "bg-red-500",
+                                                                        task.priority === "medium" &&
+                                                                        "bg-yellow-500",
+                                                                        task.priority === "low" &&
+                                                                        "bg-green-500",
+                                                                    )}
+                                                                >
+                                                                    {task.priority ?? "None"}
+                                                                </span>
+                                                            </div>
+
+                                                            {task.startDate && task.dueDate && (
+                                                                <div className="flex justify-between">
+                                                                    <span className="text-muted-foreground"> Thời gian: </span>
+                                                                    <span>  {new Date(task.startDate).toLocaleDateString("vi-VN")} </span>
+                                                                    <span>-</span>
+                                                                    <span>{new Date(task.dueDate).toLocaleDateString("vi-VN")}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </HoverCardContent>
+                                            </HoverCard>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ))}
 
@@ -247,6 +407,10 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
 
             {/* Legend */}
             <div className="mt-4 flex flex-wrap gap-4 text-xs p-4 border-t bg-gray-50 rounded-b-xl">
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                    <span>Việc cần làm</span>
+                </div>
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded"></div>
                     <span>Đang thực hiện</span>
@@ -264,8 +428,13 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
                     <span>Hủy</span>
                 </div>
                 <div className="flex items-center gap-2">
+                    <p>Ưu tiên:</p>
                     <div className="w-2 h-2 ring-2 ring-red-600"></div>
-                    <span>Ưu tiên cao</span>
+                    <span>Cao</span>
+                    <div className="w-2 h-2 ring-2 ring-yellow-600"></div>
+                    <span>Trung bình</span>
+                    <div className="w-2 h-2 ring-2 ring-red-600"></div>
+                    <span>Thấp</span>
                 </div>
             </div>
         </div>
