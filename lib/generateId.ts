@@ -15,7 +15,6 @@ export async function generateProjectId() {
             upsert: true,
         }
     )
-
     return `PRJ${String(counter.seq).padStart(3, "0")}`
 }
 export async function generateTaskCode(
@@ -35,8 +34,8 @@ export async function generateTaskCode(
             upsert: true,
         }
     )
-
-    return `${projectId}-TSK${String(
+    const projectNumber = projectId.substring(3)
+    return `${projectNumber}TSK-${String(
         counter.seq
     ).padStart(3, "0")}`
 }
