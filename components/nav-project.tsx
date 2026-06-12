@@ -3,6 +3,7 @@
 import {Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
     Home, LibraryBig,
     Plus,
@@ -32,6 +33,7 @@ import { MemberDialog } from "@/components/projects/member-project";
 import { useProjectList} from "@/hooks/useProjectList"
 import ProjectList from "@/components/projects/project-list";
 function NavProjectsContent() {
+    const { open, isMobile } = useSidebar();
     const nav = useProjectList()
     const [isGod, setIsGod] = useState(false);
     const pathname = usePathname();
@@ -40,6 +42,7 @@ function NavProjectsContent() {
     const [taskDialogProjectId, setTaskDialogProjectId] = useState<string | null>(null);
     const [taskDialogProjectTitle, setTaskDialogProjectTitle] = useState<string | null>(null);
     const [taskDialogParentId, setTaskDialogParentId] = useState<string | null>(null);
+    const shouldShowContent = open || isMobile;
 
     useEffect(() => {
         const shouldOpenCreateTask = searchParams.get("createTask") === "1";
@@ -62,21 +65,19 @@ function NavProjectsContent() {
         async function loadUser() {
             try {
                 const res = await fetch("/api/auth/me");
-
                 if (!res.ok) return;
-
                 const data = await res.json();
-
                 console.log(data);
-
                 setIsGod(data.isGod === true);
             } catch (error) {
                 console.error(error);
             }
         }
-
         loadUser();
     }, []);
+    if (!open && !isMobile) {
+        return null; // Không render gì cả, sidebar sẽ trống
+    }
     return (
         <SidebarContent className="w-fit flex-none min-w-50 max-w-70">
             <SidebarGroup>
@@ -147,7 +148,6 @@ function NavProjectsContent() {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarGroup>
-
             {/* dialog tạo task */}
             <Dialog
                 open={!!nav.taskDialogProjectId}

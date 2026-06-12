@@ -55,7 +55,7 @@ export default function NavMenu({ onToggleSidebarAction, className }: NavMenuPro
                     {onToggleSidebarAction ? (
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-lg"
                             onClick={onToggleSidebarAction}
                             aria-label="Mở sidebar"
                         >
