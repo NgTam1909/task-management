@@ -132,7 +132,7 @@ export function TaskRow({
                             </div>
 
                             <div className="font-medium">{task.title}</div>
-
+                            <div className="text-sm"> {task.description} </div>
                             <div className="text-sm">
                                 <span className="font-semibold">Thời hạn:</span>{" "}
                                 {task.startDate
@@ -174,12 +174,13 @@ export function TaskRow({
                 className={cn(
                     "hidden xl:grid items-center",
                     hasExtraColumn
-                        ? "grid-cols-[120px_1fr_120px_150px_150px_180px]"
-                        : "grid-cols-[120px_1fr_120px_150px_150px]"
+                        ? "grid-cols-[120px_200px_1fr_120px_150px_150px_180px]"
+                        : "grid-cols-[120px_200px_1fr_120px_150px_150px]"
                 )}
             >
                 <div className="px-5 py-4 text-sm font-semibold text-center">{code}</div>
                 <div className="px-5 py-4 text-sm font-semibold truncate ">{task.title}</div>
+                <div className="pr-5 py-4 text-sm truncate">{task.description}</div>
                 <div className=" py-4 text-sm">{start}<br/>→{due}</div>
                 <div className="px-5 py-4 text-center">
                     <span className={cn(
@@ -189,7 +190,7 @@ export function TaskRow({
                         {pill.label}
                     </span>
                 </div>
-                <div className="px-5 py-4 text-sm text-center">
+                <div className="pl-5 py-4 text-sm text-center">
                     <div className="flex items-center gap-2">
                         <span>{statusLabel(task.status)}</span>
                         {isWarning && (

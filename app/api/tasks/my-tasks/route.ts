@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
         await dbConnect()
 
         const docs = await TaskModel.find(query)
-            .select("code title status priority startDate dueDate startedAt completedAt projectId assignees creatorId createdAt updatedAt")
+            .select("code title description status priority startDate dueDate startedAt completedAt projectId assignees creatorId createdAt updatedAt")
             .sort({ dueDate: 1, createdAt: -1 })
             .lean()
 
@@ -131,6 +131,7 @@ export async function GET(req: NextRequest) {
                         ? record.code
                         : ""
             const title = typeof record.title === "string" ? record.title : ""
+            const description = typeof record.description === "string" ? record.description : ""
             const status = record.status
             const priority = record.priority
             const startDateRaw = record.startDate
@@ -166,6 +167,7 @@ export async function GET(req: NextRequest) {
                 id,
                 code,
                 title,
+                description,
                 status,
                 priority,
                 startDate,
