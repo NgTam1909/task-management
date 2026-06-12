@@ -42,8 +42,6 @@ function NavProjectsContent() {
     const [taskDialogProjectId, setTaskDialogProjectId] = useState<string | null>(null);
     const [taskDialogProjectTitle, setTaskDialogProjectTitle] = useState<string | null>(null);
     const [taskDialogParentId, setTaskDialogParentId] = useState<string | null>(null);
-    const shouldShowContent = open || isMobile;
-
     useEffect(() => {
         const shouldOpenCreateTask = searchParams.get("createTask") === "1";
         const routeParentId = searchParams.get("parentId");
