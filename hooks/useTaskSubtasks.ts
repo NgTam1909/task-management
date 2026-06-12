@@ -30,7 +30,7 @@ export function useTaskSubtasks(parentTask: Task) {
                 subtasks.map((subtask) => ({
                     id: subtask._id,
                     status: subtask.status,
-                    code: `TSK-${subtask._id.slice(-6).toUpperCase()}`,
+                    code: subtask.code,
                     assigneesText: Array.isArray(subtask.assignees)
                         ? subtask.assignees
                               .map((assignee) => mapAssigneeName(assignee))

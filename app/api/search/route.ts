@@ -11,11 +11,6 @@ function escapeRegex(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-function toShortTaskCode(id: string) {
-    const suffix = id.slice(-6).toUpperCase()
-    return `${suffix}`
-}
-
 export async function GET(req: NextRequest) {
     try {
         const userId = await getUserIdFromRequest(req)
@@ -115,7 +110,8 @@ export async function GET(req: NextRequest) {
                     $project: {
                         _id: 1,
                         title: 1,
-                        projectSlug: "$project.projectId",
+                        code: 1,
+                        projectId: "$project.projectId",
                         projectTitle: "$project.title",
                         createdAt: 1,
                     },
@@ -152,9 +148,9 @@ export async function GET(req: NextRequest) {
         const tasksOut: SearchTask[] = (tasksAgg as Array<Record<string, unknown>>)
             .map((t) => {
                 const id = String(t._id ?? "")
-                const code = toShortTaskCode(id)
+                const code = typeof t.code === "string" ? t.code : ""
                 const title = typeof t.title === "string" ? t.title : ""
-                const projectId = typeof t.projectSlug === "string" ? t.projectSlug : ""
+                const projectId = typeof t.projectId === "string" ? t.projectId : ""
                 const projectTitle =
                     typeof t.projectTitle === "string" ? t.projectTitle : ""
                 if (!id || !projectId) return null
