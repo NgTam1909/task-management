@@ -194,7 +194,7 @@ export function TaskRow({
                     <div className="flex items-center gap-2">
                         <span>{statusLabel(task.status)}</span>
                         {isWarning && (
-                            <span className="rounded-md border border-red-600 px-2 py-0.5 text-xs font-bold text-red-600">
+                            <span className="rounded-md border px-2 py-0.5 text-xs font-bold text-red-600">
                                 {label}
                             </span>
                         )}

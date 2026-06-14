@@ -137,7 +137,7 @@ export function MyTasks() {
       <section className="w-full py-2">
         <div className="w-full p-3">
           {/* Header */}
-          <div className="hidden xl:grid grid-cols-[120px_200px_1fr_120px_150px_150px] gap-2 border bg-white sticky top-0 z-10">
+          <div className="hidden xl:grid grid-cols-[120px_200px_1fr_120px_150px_150px] gap-2 border bg-background sticky top-0 z-10">
             <div className="px-4 py-2 text-sm text-center font-semibold">Mã công việc</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Tiêu đề</div>
             <div className="px-4 py-2 text-sm text-center font-semibold">Mô tả</div>

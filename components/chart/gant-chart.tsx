@@ -219,10 +219,10 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
     };
 
     return (
-        <div className="overflow-x-auto border rounded-xl bg-white p-4">
+        <div className="overflow-x-auto border rounded-xl bg-background p-4">
             <div className="min-w-max">
                 {/* Header với tiêu đề và cột ngày */}
-                <div className="flex sticky top-0 z-20 bg-white border-b">
+                <div className="flex sticky top-0 z-20 bg-background border-b">
                     <div className="w-48 flex-shrink-0 px-4 py-3 font-semibold border-r bg-gray-50">
                         Thành viên (KPI)
                     </div>
