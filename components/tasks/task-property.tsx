@@ -45,18 +45,17 @@ export function TaskProperty({ task }: TaskDetailProps) {
         task.ownerId !== task.assigneeIds?.[0]
     return (
           <div className="space-y-4">
-        <div className="relative flex items-start justify-between" ref={dropdownRef}>
             {showOwner && (
-                <div className="flex items-start justify-between">
+                <div className=" flex items-start justify-between">
         <span className="text-sm text-muted-foreground">
             Người chịu trách nhiệm
         </span>
-
                     <span className="text-sm">
             {task.ownerName}
         </span>
                 </div>
             )}
+              <div className="relative flex items-start justify-between" ref={dropdownRef}>
                         <span className="text-sm text-muted-foreground">Người thực hiện</span>
                         <div className="relative">
                             <button
