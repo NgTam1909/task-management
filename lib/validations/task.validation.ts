@@ -10,6 +10,7 @@ export const createTaskSchema = z.object({
     priority: z.nativeEnum(PriorityLevel).optional(),
     projectId: z.string().min(1, "Thiếu project"),
     parentId: z.string().optional(),
+    ownerId: z.string().optional(),
     assignees: z.array(z.string()).optional(),
     labels: z.array(z.string()).optional(),
     startDate: z.string().optional(),
@@ -48,6 +49,18 @@ export const createTaskSchema = z.object({
             })
         }
     }
+    if (
+        data.ownerId &&
+        data.assignees &&
+        data.assignees.length > 0
+    ) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+                "Không được gửi đồng thời ownerId và assignees",
+            path: ["ownerId"],
+        })
+    }
 })
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>
@@ -58,6 +71,7 @@ export const updateTaskSchema = z
         description: z.string().optional(),
         status: z.nativeEnum(TaskStatus).optional(),
         priority: z.nativeEnum(PriorityLevel).optional(),
+        ownerId: z.string().optional(),
         assignees: z.array(z.string()).optional(),
         labels: z.array(z.string()).optional(),
         startDate: z.string().optional(),

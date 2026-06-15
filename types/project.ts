@@ -26,6 +26,12 @@ export type ApiTask = {
     completedAt: string | null;
     estimate?: number | null;
     creatorId: string;
+    ownerId?: {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    } | string;
     assignees?: Array<{
         _id?: string;
         name?: string;

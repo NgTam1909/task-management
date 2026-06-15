@@ -41,6 +41,7 @@ export async function GET(
 
         const subtasks = await Task.find({ parentId: parent._id })
             .populate("assignees", "firstName lastName email")
+            .populate("ownerId", "firstName lastName email")
             .sort({ createdAt: -1 })
             .lean()
 

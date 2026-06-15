@@ -1,3 +1,4 @@
+// Lấy thông tin task cơ bản
 import { NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import Project from "@/models/project.model"
@@ -37,6 +38,7 @@ export async function GET(
 
         const tasks = await Task.find({ projectId: project._id })
             .populate("assignees", "firstName lastName email")
+            .populate("ownerId", "firstName lastName email")
             .sort({ createdAt: -1 })
 
         for (const task of tasks) {

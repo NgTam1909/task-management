@@ -16,7 +16,15 @@ export function toTask(item: ApiTask, projectId?: string): Task {
             return fullName || a.name || a.email || "User"
         })
         : undefined
+    const ownerId =
+        typeof item.ownerId === "string"
+            ? item.ownerId
+            : item.ownerId?._id ?? ""
 
+    const ownerName =
+        typeof item.ownerId === "object"
+            ? `${item.ownerId.lastName ?? ""} ${item.ownerId.firstName ?? ""}`.trim()
+            : ""
     return {
         id: item._id,
         projectId,
@@ -26,6 +34,8 @@ export function toTask(item: ApiTask, projectId?: string): Task {
         status: item.status as TaskStatus,
         priority,
         description: item.description ?? undefined,
+        ownerId,
+        ownerName,
         creatorId: item.creatorId ?? undefined,
         assignees,
         labels: item.labels,

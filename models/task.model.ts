@@ -18,8 +18,9 @@ export interface ITask extends Document {
     status: TaskStatus;
     priority: PriorityLevel;
     projectId: mongoose.Types.ObjectId;
-    creatorId: mongoose.Types.ObjectId;
-    assignees?: mongoose.Types.ObjectId[];
+    creatorId: mongoose.Types.ObjectId; //người tạo task
+    ownerId: mongoose.Types.ObjectId; // người chịu trách nhiệm
+    assignees?: mongoose.Types.ObjectId[]; //Người thực hiện task
     labels?: string[];
     startDate?: Date;
     dueDate?: Date;
@@ -76,7 +77,11 @@ const TaskSchema = new Schema<ITask>(
             ref: "User",
             required: true,
         },
-
+        ownerId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
         assignees: [
             {
                 type: Schema.Types.ObjectId,
@@ -160,6 +165,7 @@ const TaskSchema = new Schema<ITask>(
 
 TaskSchema.index({ status: 1 });
 TaskSchema.index({ creatorId: 1 });
+TaskSchema.index({ ownerId: 1 });
 TaskSchema.index({ dueDate: 1 });
 
 const Task: Model<ITask> =

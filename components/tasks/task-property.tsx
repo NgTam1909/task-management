@@ -17,7 +17,6 @@ export function TaskProperty({ task }: TaskDetailProps) {
         dueDateValue,
         estimateValue,
         isEditingEstimate,
-        saveError,
         dropdownRef,
         startDateRef,
         dueDateRef,
@@ -41,10 +40,23 @@ export function TaskProperty({ task }: TaskDetailProps) {
             })
             .join(", ")
     }
-
+    const showOwner =
+        task.ownerId &&
+        task.ownerId !== task.assigneeIds?.[0]
     return (
           <div className="space-y-4">
         <div className="relative flex items-start justify-between" ref={dropdownRef}>
+            {showOwner && (
+                <div className="flex items-start justify-between">
+        <span className="text-sm text-muted-foreground">
+            Người chịu trách nhiệm
+        </span>
+
+                    <span className="text-sm">
+            {task.ownerName}
+        </span>
+                </div>
+            )}
                         <span className="text-sm text-muted-foreground">Người thực hiện</span>
                         <div className="relative">
                             <button

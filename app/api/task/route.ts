@@ -1,3 +1,4 @@
+// api tạo task
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
 import dbConnect from "@/lib/db"
@@ -127,7 +128,33 @@ export async function POST(req: NextRequest) {
                 { status: 403 }
             )
         }
+        let taskOwnerId: string
+        let taskAssignees: string[]
 
+// MEMBER
+        if (currentRole === ProjectRole.MEMBER) {
+            taskOwnerId = userId
+            taskAssignees = [userId]
+        }
+// LEADER
+        else if (currentRole === ProjectRole.LEADER) {
+            taskOwnerId = userId
+
+            taskAssignees =
+                requestedAssignees.length > 0
+                    ? requestedAssignees
+                    : [userId]
+        }
+// ADMIN
+        else {
+            const selectedUser =
+                requestedAssignees.length > 0
+                    ? requestedAssignees[0]
+                    : userId
+
+            taskOwnerId = selectedUser
+            taskAssignees = [selectedUser]
+        }
         const taskCode = await generateTaskCode(
             project.projectId
         )
@@ -136,8 +163,13 @@ export async function POST(req: NextRequest) {
             code: taskCode,
             projectId: project._id,
             creatorId: new mongoose.Types.ObjectId(userId),
-            assignees: requestedAssignees.map(
-                (id) => new mongoose.Types.ObjectId(id)
+            ownerId: new mongoose.Types.ObjectId(
+                taskOwnerId
+            ),
+
+            assignees: taskAssignees.map(
+                (id: string) =>
+                    new mongoose.Types.ObjectId(id)
             ),
             parentId: parentTask?._id,
             overDue: false,
@@ -157,8 +189,8 @@ export async function POST(req: NextRequest) {
                     title: task.title,
                     status: task.status,
                     priority: task.priority,
-                    assignees: requestedAssignees,
-
+                    ownerId: task.ownerId,
+                    assignees: task.assignees,
                 },
             })
         } catch {

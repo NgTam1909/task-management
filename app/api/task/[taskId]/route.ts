@@ -1,3 +1,4 @@
+//Cập nhật task
 import { NextRequest, NextResponse } from "next/server"
 import mongoose from "mongoose"
 import dbConnect from "@/lib/db"
@@ -131,45 +132,122 @@ export async function PATCH(
             }
         }
 //Giao việc
-        if (data.assignees) {
-            const ownerId = project.owner.userId.toString()
-            const memberIds = project.members.map((m) => m.userId.toString())
-            const allIds = Array.from(new Set([ownerId, ...memberIds]))
 
-            let assignableIds: string[] = []
-            if (currentRole === ProjectRole.MEMBER) {
-                assignableIds = [userId]
-            } else if (currentRole === ProjectRole.LEADER) {
-                const memberOnlyIds = project.members
-                    .filter((m) => m.role === ProjectRole.MEMBER)
-                    .map((m) => m.userId.toString())
-                assignableIds = Array.from(new Set([userId, ...memberOnlyIds]))
-            } else {
-                assignableIds = allIds
+        let taskOwnerId: string | null = null
+        let taskAssignees: string[] | null = null
+
+        if (data.assignees !== undefined) {
+
+            // chỉ cho đổi assignee ở backlog hoặc to-do
+            if (
+                ![
+                    TaskStatus.BACKLOG,
+                    TaskStatus.TODO,
+                ].includes(task.status)
+            ) {
+                return NextResponse.json(
+                    {
+                        message:
+                            "Chỉ được thay đổi người thực hiện khi task ở Backlog hoặc Todo",
+                    },
+                    { status: 400 }
+                )
             }
 
-            const invalidAssignees = data.assignees.filter(
-                (assigneeId) => !assignableIds.includes(assigneeId)
-            )
-
-            if (invalidAssignees.length > 0) {
+            // MEMBER
+            if (currentRole === ProjectRole.MEMBER) {
                 return NextResponse.json(
-                    {message: "Không có quyền gán người thực hiện này"},
-                    {status: 403}
+                    {
+                        message:
+                            "Member không có quyền thay đổi người thực hiện",
+                    },
+                    { status: 403 }
                 )
+            }
+
+            // LEADER
+            if (currentRole === ProjectRole.LEADER) {
+
+                // leader chỉ được giao task mình chịu trách nhiệm
+                if (task.ownerId.toString() !== userId) {
+                    return NextResponse.json(
+                        {
+                            message:
+                                "Bạn không phải người chịu trách nhiệm task này",
+                        },
+                        { status: 403 }
+                    )
+                }
+
+                const memberIds = project.members
+                    .filter(
+                        (m: IProjectMember) =>
+                            m.role === ProjectRole.MEMBER
+                    )
+                    .map(
+                        (m: IProjectMember) =>
+                            m.userId.toString()
+                    )
+
+                const invalidAssignees =
+                    data.assignees.filter(
+                        (id) => !memberIds.includes(id)
+                    )
+
+                if (invalidAssignees.length > 0) {
+                    return NextResponse.json(
+                        {
+                            message:
+                                "Leader chỉ được giao việc cho Member",
+                        },
+                        { status: 403 }
+                    )
+                }
+
+                taskOwnerId =
+                    task.ownerId.toString()
+
+                taskAssignees =
+                    data.assignees
+            }
+
+            // ADMIN
+            else if (currentRole === ProjectRole.ADMIN) {
+
+                if (data.assignees.length === 0) {
+                    return NextResponse.json(
+                        {
+                            message:
+                                "Phải chọn người thực hiện",
+                        },
+                        { status: 400 }
+                    )
+                }
+
+                taskOwnerId =
+                    data.assignees[0]
+
+                taskAssignees =
+                    [data.assignees[0]]
             }
         }
         //Cập nhật
         const updateData: Record<string, unknown> = {}
-
         if (data.title !== undefined) updateData.title = data.title
         if (data.description !== undefined) updateData.description = data.description
         if (data.status !== undefined) updateData.status = data.status
         if (data.priority !== undefined) updateData.priority = data.priority
         if (data.labels !== undefined) updateData.labels = data.labels
         if (data.estimate !== undefined) updateData.estimate = data.estimate
-        if (data.assignees !== undefined) {
-            updateData.assignees = data.assignees.map((id) => toObjectId(id))
+        if (taskAssignees !== null) {
+
+            updateData.assignees =
+                taskAssignees.map((id) =>
+                    toObjectId(id)
+                )
+
+            updateData.ownerId =
+                toObjectId(taskOwnerId!)
         }
         if (data.startDate !== undefined) {
 
@@ -251,6 +329,16 @@ export async function PATCH(
                     newFieldValue = Array.isArray(rawNewValue)
                         ? (rawNewValue as mongoose.Types.ObjectId[]).map((id) => id.toString())
                         : []
+                }
+                if (key === "ownerId") {
+
+                    oldFieldValue =
+                        task.ownerId?.toString()
+
+                    newFieldValue =
+                        (
+                            rawNewValue as mongoose.Types.ObjectId
+                        ).toString()
                 }
 
                 const normalizedOld = normalizeValue(oldFieldValue)

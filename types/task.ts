@@ -24,6 +24,8 @@ export interface Task {
     status: TaskStatus;
     description?: string;
     creatorId: string;
+    ownerId: string;
+    ownerName: string;
     assignees?: string[];
     assigneeIds?: string[];
     labels?: string[];
