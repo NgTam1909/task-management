@@ -15,6 +15,12 @@ interface AssigneeGroup {
     taskCount: number;
     doneCount: number;
     lanes: TaskLane[];
+    email?: string;
+    activeCount: number;
+    overdueCount: number;
+    completedCount: number;
+    totalCount: number;
+    managedCount: number;
 }
 
 export default function GanttChart({ tasks }: { tasks: Task[] }) {
@@ -127,10 +133,49 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
 
             return lanes;
         }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Xây dựng bản đồ ánh xạ từ tên hiển thị sang thông tin người dùng (ID, Email)
+        const userRegistry = new Map<string, { id: string; name: string; email?: string }>();
+        tasks.forEach((task) => {
+            if (task.assigneeDetails) {
+                task.assigneeDetails.forEach((detail) => {
+                    if (detail.name && !userRegistry.has(detail.name)) {
+                        userRegistry.set(detail.name, {
+                            id: detail.id,
+                            name: detail.name,
+                            email: detail.email,
+                        });
+                    }
+                });
+            }
+            if (task.assigneeIds && task.assignees) {
+                task.assignees.forEach((name, idx) => {
+                    const id = task.assigneeIds?.[idx];
+                    if (id && name && !userRegistry.has(name)) {
+                        userRegistry.set(name, {
+                            id,
+                            name,
+                        });
+                    }
+                });
+            }
+            if (task.ownerId && task.ownerName) {
+                if (!userRegistry.has(task.ownerName)) {
+                    userRegistry.set(task.ownerName, {
+                        id: task.ownerId,
+                        name: task.ownerName,
+                        email: task.ownerEmail,
+                    });
+                }
+            }
+        });
+
         // Sắp xếp theo số lượng task (giảm dần)
         const assigneeGroups: AssigneeGroup[] = Array.from(groupMap.entries())
-            .map(([assignee, tasks]) => {
-                const sortedTasks = [...tasks].sort((a, b) => {
+            .map(([assignee, tasksGroup]) => {
+                const sortedTasks = [...tasksGroup].sort((a, b) => {
                     const aStart = a.startDate
                         ? new Date(a.startDate).getTime()
                         : 0;
@@ -141,15 +186,53 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
 
                     return aStart - bStart;
                 });
-                const doneCount = tasks.filter(
+                const doneCount = tasksGroup.filter(
                     (t) => t.status === "done"
                 ).length;
 
+                // Thống kê dựa trên toàn bộ danh sách tasks của dự án
+                const allAssigneeTasks = assignee === "Chưa phân công"
+                    ? tasks.filter((t) => !t.assignees || t.assignees.length === 0)
+                    : tasks.filter((t) => t.assignees?.includes(assignee));
+
+                const totalCount = allAssigneeTasks.length;
+                const completedCount = allAssigneeTasks.filter((t) => t.status === "done").length;
+                
+                // Số task đang làm bao gồm "to do" và "in progress"
+                const activeCount = allAssigneeTasks.filter(
+                    (t) => t.status === "todo" || t.status === "inprogress"
+                ).length;
+
+                const overdueCount = allAssigneeTasks.filter((t) => {
+                    if (t.status === "done" || t.status === "cancelled") return false;
+                    if (!t.dueDate) return false;
+                    return new Date(t.dueDate) < today;
+                }).length;
+
+                const userInfo = userRegistry.get(assignee);
+                const email = userInfo?.email;
+                const userId = userInfo?.id;
+
+                const managedCount = userId
+                    ? tasks.filter((t) => {
+                          return (
+                              t.ownerId === userId &&
+                              !(t.assigneeIds?.includes(userId) || t.assignees?.includes(assignee))
+                          );
+                      }).length
+                    : 0;
+
                 return {
                     assignee,
-                    taskCount: tasks.length,
+                    taskCount: tasksGroup.length,
                     doneCount,
                     lanes: createLanes(sortedTasks),
+                    email,
+                    activeCount,
+                    overdueCount,
+                    completedCount,
+                    totalCount,
+                    managedCount,
                 };
             })
             .sort((a, b) => b.taskCount - a.taskCount);
@@ -223,14 +306,14 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
             <div className="min-w-max">
                 {/* Header với tiêu đề và cột ngày */}
                 <div className="flex sticky top-0 z-20 bg-background border-b">
-                    <div className="w-48 flex-shrink-0 px-4 py-3 font-semibold border-r bg-gray-50">
+                    <div className="w-48 shrink-0 px-4 py-3 font-semibold border-r bg-gray-50">
                         Thành viên (KPI)
                     </div>
                     <div className="flex">
                         {dayColumns.map((day, idx) => (
                             <div
                                 key={idx}
-                                className="w-16 flex-shrink-0 px-2 py-3 text-center text-xs font-medium border-r bg-gray-50"
+                                className="w-16 shrink-0 px-2 py-3 text-center text-xs font-medium border-r bg-gray-50"
                             >
                                 <div>{formatDate(day)}</div>
                                 <div className="text-gray-500">
@@ -250,7 +333,7 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
                                 {dayColumns.map((_, idx) => (
                                     <div
                                         key={idx}
-                                        className="w-16 flex-shrink-0 border-r bg-blue-50"
+                                        className="w-16 shrink-0 border-r bg-blue-50"
                                     />
                                 ))}
                             </div>
@@ -263,21 +346,86 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
                                 className="flex border-b hover:bg-gray-50"
                             >
                                 {/* chỉ hiển thị tên ở lane đầu tiên */}
-                                <div className="w-48 flex-shrink-0 border-r px-4 py-3">
+                                <div className="w-48 shrink-0 border-r px-4 py-3">
                                     {laneIndex === 0 ? (
-                                        <div className="font-medium">
-                                            {group.assignee}
-                                            <span
-                                                className={cn(
-                                                    "ml-2 text-xs px-2 py-1 rounded-full text-white",
-                                                    group.doneCount === group.taskCount
-                                                        ? "bg-green-600"
-                                                        : "bg-blue-600"
-                                                )}
-                                            >
-                                                {group.doneCount}/{group.taskCount}
-                                            </span>
-                                        </div>
+                                        group.assignee === "Chưa phân công" ? (
+                                            <div className="font-medium text-gray-500">
+                                                {group.assignee}
+                                            </div>
+                                        ) : (
+                                            <HoverCard openDelay={200}>
+                                                <HoverCardTrigger asChild>
+                                                    <div className="font-medium cursor-pointer hover:text-blue-600 transition-colors flex items-center justify-between">
+                                                        <span className="truncate max-w-25">{group.assignee}</span>
+                                                        <span
+                                                            className={cn(
+                                                                "ml-2 text-xs px-2 py-0.5 rounded-full text-white shrink-0",
+                                                                group.doneCount === group.taskCount
+                                                                    ? "bg-green-600"
+                                                                    : "bg-blue-600"
+                                                            )}
+                                                        >
+                                                            {group.doneCount}/{group.taskCount}
+                                                        </span>
+                                                    </div>
+                                                </HoverCardTrigger>
+                                                <HoverCardContent className="w-80 p-4" align="start" side="right">
+                                                    <div className="space-y-3">
+                                                        <div className="border-b pb-2">
+                                                            <h4 className="font-semibold text-sm text-foreground">
+                                                                {group.assignee}
+                                                            </h4>
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {group.email || "Không có email"}
+                                                            </p>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                                            <div className="bg-blue-50 p-2 rounded-lg dark:bg-blue-950/20">
+                                                                <span className="text-muted-foreground block">Đang làm / Cần làm</span>
+                                                                <span className="font-bold text-sm text-blue-600 dark:text-blue-400">
+                                                                    {group.activeCount} task
+                                                                </span>
+                                                            </div>
+                                                            <div className={cn(
+                                                                "p-2 rounded-lg",
+                                                                group.overdueCount > 0
+                                                                    ? "bg-red-50 dark:bg-red-950/20"
+                                                                    : "bg-gray-50 dark:bg-gray-800/20"
+                                                            )}>
+                                                                <span className="text-muted-foreground block">Quá hạn</span>
+                                                                <span className={cn(
+                                                                    "font-bold text-sm",
+                                                                    group.overdueCount > 0
+                                                                        ? "text-red-600 dark:text-red-400"
+                                                                        : "text-gray-600 dark:text-gray-400"
+                                                                )}>
+                                                                    {group.overdueCount} task
+                                                                </span>
+                                                            </div>
+                                                            <div className="bg-green-50 p-2 rounded-lg dark:bg-green-950/20 col-span-2 flex justify-between items-center">
+                                                                <div>
+                                                                    <span className="text-muted-foreground block">Tiến độ hoàn thành</span>
+                                                                    <span className="font-bold text-sm text-green-600 dark:text-green-400">
+                                                                        {group.completedCount} / {group.totalCount} task
+                                                                    </span>
+                                                                </div>
+                                                                <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded dark:bg-green-900/30 dark:text-green-300">
+                                                                    {group.totalCount > 0 ? Math.round((group.completedCount / group.totalCount) * 100) : 0}%
+                                                                </span>
+                                                            </div>
+                                                            {group.managedCount > 0 && (
+                                                                <div className="bg-purple-50 p-2 rounded-lg dark:bg-purple-950/20 col-span-2">
+                                                                    <span className="text-muted-foreground block font-medium">Vai trò Leader / Chịu trách nhiệm</span>
+                                                                    <span className="font-bold text-xs text-purple-700 dark:text-purple-400">
+                                                                        Đang quản lý {group.managedCount} task (chịu trách nhiệm chính)
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </HoverCardContent>
+                                            </HoverCard>
+                                        )
                                     ) : null}
                                 </div>
 
@@ -285,7 +433,7 @@ export default function GanttChart({ tasks }: { tasks: Task[] }) {
                                     {dayColumns.map((_, idx) => (
                                         <div
                                             key={idx}
-                                            className="w-16 flex-shrink-0 border-r h-16"
+                                            className="w-16 shrink-0 border-r h-16"
                                         />
                                     ))}
 

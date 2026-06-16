@@ -12,7 +12,7 @@ import { Task } from "@/types/task"
 import { CheckCircle2, Clock3, ListTodo, CircleX, CircleDashed } from "lucide-react"
 import { toTask } from "@/lib/mappers/task"
 import { TaskRow } from "@/components/tasks/task-row"
-import GanttChart from "@/components/chart/gant-chart";
+import GanttChart from "@/components/chart/gantt-chart";
 type Props = {
     projectId: string
 }
@@ -252,8 +252,15 @@ export default function AdvancedDashboard({ projectId }: Props) {
                                 task={task}
                                 hasExtraColumn
                                 extraContent={
-                                    <div className="text-center">
-                                        {task.assignees}
+                                    <div className="flex flex-col items-center gap-1">
+                                        {task.assignees?.map((name) => (
+                                            <div
+                                                key={name}
+                                                className="text-xs"
+                                            >
+                                                {name}
+                                            </div>
+                                        ))}
                                     </div>
                                 }
                             />

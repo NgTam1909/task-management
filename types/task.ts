@@ -39,6 +39,8 @@ export interface Task {
     estimate?: number;
     createdAt?: string;
     updatedAt?: string;
+    ownerEmail?: string;
+    assigneeDetails?: Array<{ id: string; name: string; email?: string }>;
 }
 export type LeanUser = {
     _id: mongoose.Types.ObjectId

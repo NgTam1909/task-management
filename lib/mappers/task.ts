@@ -25,6 +25,25 @@ export function toTask(item: ApiTask, projectId?: string): Task {
         typeof item.ownerId === "object"
             ? `${item.ownerId.lastName ?? ""} ${item.ownerId.firstName ?? ""}`.trim()
             : ""
+    const ownerEmail =
+        typeof item.ownerId === "object"
+            ? item.ownerId.email
+            : undefined
+
+    const assigneeDetails = Array.isArray(item.assignees)
+        ? item.assignees.map((a) => {
+            if (typeof a === "string") {
+                return { id: a, name: a, email: undefined }
+            }
+            const fullName = `${a.lastName ?? ""} ${a.firstName ?? ""}`.trim()
+            return {
+                id: a._id || "",
+                name: fullName || a.name || a.email || "User",
+                email: a.email,
+            }
+        })
+        : undefined
+
     return {
         id: item._id,
         projectId,
@@ -36,8 +55,10 @@ export function toTask(item: ApiTask, projectId?: string): Task {
         description: item.description ?? undefined,
         ownerId,
         ownerName,
+        ownerEmail,
         creatorId: item.creatorId ?? undefined,
         assignees,
+        assigneeDetails,
         labels: item.labels,
 
         startDate: item.startDate ?? undefined,
