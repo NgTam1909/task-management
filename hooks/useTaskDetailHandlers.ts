@@ -8,24 +8,21 @@ import { PriorityLevel } from "@/types/task"
 
 export function useTaskDetailHandlers(task: any, state: any) {
     const handleSelectUser = async (userId: string) => {
-        const newUsers =
-            state.currentUserRole === "Member"
-                ? [userId]
-                : state.selectedUsers.includes(userId)
-                    ? state.selectedUsers.filter((id: string) => id !== userId)
-                    : [...state.selectedUsers, userId]
-
-        state.setSelectedUsers(newUsers)
-
-        try {
-            state.setSaveError(null)
-            await updateTask(task.id, { assignees: newUsers })
-            window.dispatchEvent(new CustomEvent("task:updated"))
-            state.setIsOpen(false)
-        } catch {
-            state.setSelectedUsers(task.assigneeIds || [])
-            state.setSaveError("Cập nhật người thực hiện thất bại")
+        let newUsers: string[]
+        if (state.currentUserRole === "Member") {
+            newUsers = [userId]
+        } else if (state.currentUserRole === "Admin") {
+            // Admin luôn chỉ có 1 assignee
+            newUsers = [userId]
+        } else {
+            // Leader có thể chọn nhiều Member
+            newUsers = state.selectedUsers.includes(userId)
+                ? state.selectedUsers.filter(
+                    (id: string) => id !== userId
+                )
+                : [...state.selectedUsers, userId]
         }
+        state.setSelectedUsers(newUsers)
     }
 
     const handleTitleBlur = async () => {
@@ -227,6 +224,7 @@ export function useTaskDetailHandlers(task: any, state: any) {
         handleSelectUser,
         handleTitleBlur,
         handleDescriptionBlur,
+        handleAssigneeBlur,
         handlePriorityChange,
         handleStartDateChange,
         handleDueDateChange,
