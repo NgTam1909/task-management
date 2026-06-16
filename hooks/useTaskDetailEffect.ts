@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import {
     getTaskAuditLogs,
     getTaskComments,
@@ -41,21 +41,34 @@ export function useTaskDetailEffects(task: any, state: any) {
     }
 
     useEffect(() => {
+        if (!state.isOpen) return
+
         const handleClickOutside = (event: MouseEvent) => {
             if (
                 state.dropdownRef.current &&
                 !state.dropdownRef.current.contains(event.target as Node)
             ) {
                 state.setIsOpen(false)
-                state.setSelectedUsers(task.assigneeIds || [])
             }
         }
 
         document.addEventListener("mousedown", handleClickOutside)
-        return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [task.assigneeIds])
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside)
+        }
+    }, [state.isOpen])
+
+    const wasOpenRef = useRef(state.isOpen)
 
     useEffect(() => {
+        if (wasOpenRef.current && !state.isOpen) {
+            void state.handleAssigneeBlur?.()
+        }
+        wasOpenRef.current = state.isOpen
+    }, [state.isOpen, state.handleAssigneeBlur])
+
+    useEffect(() => {
+        state.setSelectedUsers(task.assigneeIds || [])
         state.setTitleValue(task.title ?? "")
         state.setDescriptionValue(task.description ?? "")
         state.setPriorityValue(task.priority ?? "")

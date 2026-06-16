@@ -110,9 +110,11 @@ export function useTaskDetail(task: Task): UseTaskDetailResult {
         dueDateRef,
     }
 
-    useTaskDetailEffects(task, state)
-
     const handlers = useTaskDetailHandlers(task, state)
+
+    Object.assign(state, handlers)
+
+    useTaskDetailEffects(task, state)
 
     return {
         ...state,

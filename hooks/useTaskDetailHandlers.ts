@@ -93,7 +93,37 @@ export function useTaskDetailHandlers(task: any, state: any) {
             state.setSaveError("Cập nhật priority thất bại")
         }
     }
+    const handleAssigneeBlur = async () => {
 
+        if (
+            JSON.stringify(state.selectedUsers) ===
+            JSON.stringify(task.assigneeIds || [])
+        ) {
+            return
+        }
+
+        try {
+            state.setSaveError(null)
+
+            await updateTask(task.id, {
+                assignees: state.selectedUsers,
+            })
+
+            window.dispatchEvent(
+                new CustomEvent("task:updated")
+            )
+
+        } catch {
+
+            state.setSelectedUsers(
+                task.assigneeIds || []
+            )
+
+            state.setSaveError(
+                "Cập nhật người thực hiện thất bại"
+            )
+        }
+    }
     const handleStartDateChange = async (value: string) => {
         state.setStartDateValue(value)
 

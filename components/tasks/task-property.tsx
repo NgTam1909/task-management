@@ -71,22 +71,30 @@ export function TaskProperty({ task }: TaskDetailProps) {
                                 <div className="absolute right-0 z-50 mt-2 w-64 rounded-md border bg-popover shadow-lg">
                                     <div className="max-h-64 overflow-y-auto py-1">
                                         {availableUsers.length > 0 ? (
-                                            availableUsers.map((user) => (
-                                                <div
-                                                    key={user.id}
-                                                    onClick={() => void handleSelectUser(user.id)}
-                                                    className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-accent"
-                                                >
-                                                    <div className="flex-1">
-                                                        <span className="text-sm">{user.name}</span>
-                                                        {user.email && (
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {user.email}
-                                                            </p>
+                                            availableUsers.map((user) => {
+                                                const selected = selectedUsers.includes(user.id)
+
+                                                return (
+                                                    <div
+                                                        key={user.id}
+                                                        onClick={() => handleSelectUser(user.id)}
+                                                        className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-accent"
+                                                    >
+                                                        <div>
+                                                            <div className="text-sm">{user.name}</div>
+                                                            {user.email && (
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    {user.email}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {selected && (
+                                                            <span>✓</span>
                                                         )}
                                                     </div>
-                                                </div>
-                                            ))
+                                                )
+                                            })
                                         ) : (
                                             <div className="px-3 py-2 text-center text-sm text-muted-foreground">
                                                 Chưa có người làm
