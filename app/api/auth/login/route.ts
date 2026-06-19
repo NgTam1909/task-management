@@ -19,6 +19,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Mật khẩu không chính xác" }, { status: 401 })
     }
 
+    user.lastLoginAt = new Date()
+    await user.save()
+
     const token = signToken({
         id: user._id.toString(),
         email: user.email,

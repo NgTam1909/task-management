@@ -135,7 +135,7 @@ export function UserManagement() {
                                         {/*</TableCell>*/}
 
                                         <TableCell>
-                                            {user.lastLoginAt}
+                                            {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString("vi-VN") : "Chưa đăng nhập"}
                                         </TableCell>
 
                                         <TableCell>

@@ -11,7 +11,7 @@ export interface AdminUser {
     lastName: string;
     email: string;
     createdAt: string;
-    lastLoginAt: string;
+    lastLoginAt?: string | null;
 }
 
 export interface AdminProject {

@@ -106,6 +106,7 @@ export async function GET(req: NextRequest) {
       if (!user.googleId) user.googleId = googleId
       if (!user.firstName && firstName) user.firstName = firstName
       if (!user.lastName && lastName) user.lastName = lastName
+      user.lastLoginAt = new Date()
       await user.save()
     } else {
       // Tạo tài khoản mới hoàn toàn nếu chưa từng tồn tại cả GoogleID lẫn Email
@@ -114,6 +115,7 @@ export async function GET(req: NextRequest) {
         googleId,
         firstName: firstName || "Google User",
         lastName: lastName || "",
+        lastLoginAt: new Date(),
       })
     }
 
