@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (!currentRole) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Quyền người dùng không hợp lệ" }, { status: 403 })
         }
 
         const ownerId = project.owner.userId.toString()

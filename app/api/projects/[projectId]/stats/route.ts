@@ -39,9 +39,8 @@ export async function GET(
             project.members?.some((m) => m.userId?.toString() === userId)
 
         if (!isMember) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Người dùng không phải thành viên dự án" }, { status: 403 })
         }
-
         const projectObjectId = new mongoose.Types.ObjectId(project._id)
 
         const stats = await TaskModel.aggregate([

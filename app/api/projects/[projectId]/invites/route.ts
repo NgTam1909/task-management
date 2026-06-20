@@ -69,7 +69,7 @@ export async function POST(
             );
         }
 
-        let currentRole: ProjectRole | null = null;
+        let currentRole: ProjectRole | null;
         if (project.owner?.userId?.toString() === userId) {
             currentRole = project.owner.role;
         } else {
@@ -78,7 +78,7 @@ export async function POST(
         }
 
         if (!canInvite(currentRole)) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+            return NextResponse.json({ message: "Người dùng không có quyền mời thành viên" }, { status: 403 });
         }
 
         const existingUser = await User.findOne({ email }).select("_id email");

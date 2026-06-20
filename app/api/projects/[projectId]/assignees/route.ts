@@ -33,7 +33,7 @@ export async function GET(
             return NextResponse.json({ message: "Không tìm thấy dự án" }, { status: 404 })
         }
 
-        let currentRole: ProjectRole | null = null
+        let currentRole: ProjectRole | null
         if (project.owner?.userId?.toString() === userId) {
             currentRole = project.owner.role
         } else {
@@ -42,14 +42,14 @@ export async function GET(
         }
 
         if (!currentRole) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Quyền người dùng không hợp lệ" }, { status: 403 })
         }
 
         const ownerId = project.owner.userId.toString()
         const memberIds = project.members.map((m: IProjectMember) => m.userId.toString())
         const allIds = Array.from(new Set([ownerId, ...memberIds]))
 
-        let assignableIds: string[] = []
+        let assignableIds: string[]
         if (currentRole === ProjectRole.MEMBER) {
             assignableIds = [userId]
         } else if (currentRole === ProjectRole.LEADER) {

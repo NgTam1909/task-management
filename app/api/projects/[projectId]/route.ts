@@ -106,7 +106,7 @@ export async function PATCH(
 
         const role = getUserRole(project, userId)
         if (!canEditProject(role)) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Người dùng không có quyền cập nhật thông tin dự án"}, { status: 403 })
         }
 
         const oldValue = {

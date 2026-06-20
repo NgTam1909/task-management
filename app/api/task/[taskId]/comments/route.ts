@@ -60,7 +60,7 @@ async function getTaskWithAccess(req: NextRequest, taskId: string) {
 
     if (!isMember) {
         return {
-            error: NextResponse.json({ message: "Forbidden" }, { status: 403 }),
+            error: NextResponse.json({ message: "Người dùng không phải thành viên dự án" }, { status: 403 }),
         }
     }
 

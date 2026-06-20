@@ -39,7 +39,7 @@ export async function GET(
             project.members?.some((m: IProjectMember) => m.userId?.toString() === userId)
 
         if (!isMember) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Người dùng không phải thành viên dự án" }, { status: 403 })
         }
 
         const currentRole =
@@ -133,7 +133,7 @@ export async function PATCH(
                   null
 
         if (currentRole !== ProjectRole.ADMIN) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Người dùng không  có quyền admin" }, { status: 403 })
         }
 
         const { memberId, role } = parsed.data
@@ -223,7 +223,7 @@ export async function DELETE(
                   null
 
         if (currentRole !== ProjectRole.ADMIN) {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+            return NextResponse.json({ message: "Người dùng không có quyền admin" }, { status: 403 })
         }
 
         const ownerId = project.owner.userId.toString()

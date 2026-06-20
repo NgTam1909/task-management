@@ -57,7 +57,7 @@ export async function GET(
 
         if (!isMember) {
             return NextResponse.json(
-                { message: "Forbidden" },
+                { message: "Người dùng không phải thành viên dự án" },
                 { status: 403 }
             )
         }
